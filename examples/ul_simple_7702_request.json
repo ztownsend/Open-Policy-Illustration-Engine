@@ -1,0 +1,52 @@
+{
+  "product_code": "simple_ul",
+  "issue_age": 35,
+  "issue_gender": "M",
+  "risk_class": "NT",
+  "face_amount": "100000",
+  "issue_date": "2025-01-01",
+  "duration_months": 6,
+  "premium_schedule": [
+    {"start_month": 1, "end_month": 6, "amount": "200"}
+  ],
+  "scenarios": {
+    "current": {
+      "crediting_rate_annual": "0.04",
+      "premium_load_pct": "0.06",
+      "monthly_policy_fee": "5",
+      "monthly_per_thousand_admin_fee": "0.10",
+      "coi_table": {"35": "0.20"},
+      "surrender_charge_schedule": {"1": "1000"},
+      "tax_7702": {
+        "enabled": true,
+        "test_type": "both",
+        "gpt_guideline_single_premium": "150",
+        "gpt_guideline_level_premium_annual": "1000",
+        "gpt_premium_timing": "bop",
+        "cvat_net_single_premium": "10000",
+        "cvat_cash_value_basis": "csv",
+        "tolerance": "0"
+      }
+    },
+    "guaranteed": {
+      "crediting_rate_annual": "0.03",
+      "premium_load_pct": "0.06",
+      "monthly_policy_fee": "5",
+      "monthly_per_thousand_admin_fee": "0.10",
+      "coi_table": {"35": "0.25"},
+      "surrender_charge_schedule": {"1": "1200"},
+      "tax_7702": {
+        "enabled": true,
+        "test_type": "both",
+        "gpt_guideline_single_premium": "150",
+        "gpt_guideline_level_premium_annual": "1000",
+        "gpt_premium_timing": "bop",
+        "cvat_net_single_premium": "10000",
+        "cvat_cash_value_basis": "csv",
+        "tolerance": "0"
+      }
+    }
+  },
+  "death_benefit_option": "level",
+  "minimum_account_value_floor": "0"
+}
