@@ -70,6 +70,11 @@ _HTML = """
       gap: 8px;
       margin-bottom: 12px;
     }
+    .preset-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
     button {
       border: none;
       background: var(--accent);
@@ -84,6 +89,10 @@ _HTML = """
       background: transparent;
       color: var(--accent);
       border: 1px solid var(--accent);
+    }
+    button.small {
+      padding: 6px 10px;
+      font-size: 12px;
     }
     .toggle {
       display: flex;
@@ -103,6 +112,26 @@ _HTML = """
       color: #fff;
       border-radius: 999px;
       padding: 6px 12px;
+    }
+    .columns {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .columns label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      border: 1px solid #efe4d7;
+      border-radius: 10px;
+      padding: 6px 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .columns input {
+      accent-color: var(--accent-2);
     }
     textarea {
       width: 100%;
@@ -139,6 +168,13 @@ _HTML = """
       font-size: 12px;
       margin-bottom: 12px;
     }
+    .diff-cell {
+      background: #fff1e1;
+      color: #7c2f10;
+    }
+    .diff-same {
+      color: var(--muted);
+    }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -164,6 +200,9 @@ _HTML = """
       <h2>Request Builder</h2>
       <div class="controls">
         <button id="run">Run Illustration</button>
+        <button id="downloadCsv" class="secondary">Download CSV</button>
+        <button id="copyRequest" class="secondary">Copy Request</button>
+        <button id="copyResult" class="secondary">Copy Result</button>
         <button id="exportRequest" class="secondary">Export Request</button>
         <button id="exportResult" class="secondary">Export Result</button>
       </div>
@@ -179,6 +218,16 @@ _HTML = """
           <label><input type="radio" name="scenario" value="diff"><span>Diff</span></label>
         </div>
       </div>
+      <div class="controls">
+        <div class="preset-bar">
+          <button id="colsCore" class="secondary small">Core</button>
+          <button id="colsValue" class="secondary small">Values</button>
+          <button id="colsCharges" class="secondary small">Charges</button>
+          <button id="colsLoans" class="secondary small">Loans</button>
+          <button id="colsAll" class="secondary small">All</button>
+        </div>
+      </div>
+      <div id="columns" class="columns"></div>
       <div id="diff" class="diff-box">Run an illustration to see diffs.</div>
       <div style="overflow:auto; max-height: 420px;">
         <table id="ledger"></table>
@@ -221,20 +270,68 @@ _HTML = """
     const statusEl = document.getElementById("status");
     const diffEl = document.getElementById("diff");
     const ledgerEl = document.getElementById("ledger");
+    const columnsEl = document.getElementById("columns");
     const runBtn = document.getElementById("run");
+    const downloadCsvBtn = document.getElementById("downloadCsv");
+    const copyRequestBtn = document.getElementById("copyRequest");
+    const copyResultBtn = document.getElementById("copyResult");
     const exportRequestBtn = document.getElementById("exportRequest");
     const exportResultBtn = document.getElementById("exportResult");
+    const colsCoreBtn = document.getElementById("colsCore");
+    const colsValueBtn = document.getElementById("colsValue");
+    const colsChargesBtn = document.getElementById("colsCharges");
+    const colsLoansBtn = document.getElementById("colsLoans");
+    const colsAllBtn = document.getElementById("colsAll");
 
     let result = null;
 
     requestEl.value = JSON.stringify(defaultRequest, null, 2);
+    renderColumnPicker();
 
     function setStatus(message) {
       statusEl.textContent = message;
     }
 
-    function downloadJSON(filename, payload) {
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const columnDefs = [
+      { key: "t", label: "t" },
+      { key: "policy_year", label: "year" },
+      { key: "attained_age", label: "age" },
+      { key: "policy_status", label: "status" },
+      { key: "premium", label: "premium" },
+      { key: "cumulative_premium", label: "cum_prem" },
+      { key: "account_value_bop", label: "av_bop" },
+      { key: "account_value_mid_raw", label: "av_mid" },
+      { key: "account_value_eop", label: "av_eop" },
+      { key: "cash_surrender_value", label: "csv" },
+      { key: "surrender_charge", label: "surr" },
+      { key: "death_benefit", label: "db" },
+      { key: "charges_total", label: "charges" },
+      { key: "charges_assessed", label: "chg_assess" },
+      { key: "charges_paid", label: "chg_paid" },
+      { key: "charge_shortfall", label: "chg_short" },
+      { key: "interest_credited", label: "interest" },
+      { key: "net_amount_at_risk", label: "nar" },
+      { key: "corridor_uplift", label: "corridor" },
+      { key: "rider_charges", label: "rider_chg" },
+      { key: "withdrawal", label: "withdrawal" },
+      { key: "loan_draw", label: "loan_draw" },
+      { key: "loan_repayment", label: "loan_repay" },
+      { key: "loan_interest", label: "loan_int" },
+      { key: "loan_balance", label: "loan_bal" }
+    ];
+
+    const columnPresets = {
+      core: ["t", "policy_status", "premium", "account_value_eop", "cash_surrender_value", "death_benefit"],
+      values: ["t", "account_value_bop", "account_value_mid_raw", "account_value_eop", "interest_credited"],
+      charges: ["t", "premium", "charges_total", "charges_assessed", "charges_paid", "charge_shortfall"],
+      loans: ["t", "withdrawal", "loan_draw", "loan_repayment", "loan_interest", "loan_balance"],
+      all: columnDefs.map((col) => col.key)
+    };
+
+    let selectedColumns = new Set(columnPresets.core);
+
+    function downloadFile(filename, contents, type) {
+      const blob = new Blob([contents], { type });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -243,22 +340,127 @@ _HTML = """
       URL.revokeObjectURL(url);
     }
 
+    function downloadJSON(filename, payload) {
+      downloadFile(filename, JSON.stringify(payload, null, 2), "application/json");
+    }
+
+    function downloadCSV(filename, csvText) {
+      downloadFile(filename, csvText, "text/csv");
+    }
+
+    function copyText(label, text) {
+      const fallbackCopy = () => {
+        const helper = document.createElement("textarea");
+        helper.value = text;
+        helper.style.position = "fixed";
+        helper.style.opacity = "0";
+        document.body.appendChild(helper);
+        helper.focus();
+        helper.select();
+        try {
+          document.execCommand("copy");
+          setStatus(`${label} copied.`);
+        } catch (err) {
+          setStatus(`Unable to copy ${label.toLowerCase()}.`);
+        }
+        document.body.removeChild(helper);
+      };
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(
+          () => setStatus(`${label} copied.`),
+          () => fallbackCopy()
+        );
+      } else {
+        fallbackCopy();
+      }
+    }
+
+    function getSelectedColumns() {
+      const columns = columnDefs.filter((col) => selectedColumns.has(col.key));
+      return columns.length ? columns : [columnDefs[0]];
+    }
+
+    function renderColumnPicker() {
+      columnsEl.innerHTML = columnDefs.map((col) => {
+        return (
+          `<label>` +
+          `<input type="checkbox" data-key="${col.key}">` +
+          `<span>${col.label}</span>` +
+          `</label>`
+        );
+      }).join("");
+      columnsEl.querySelectorAll("input").forEach((input) => {
+        const key = input.dataset.key;
+        input.checked = selectedColumns.has(key);
+        input.addEventListener("change", () => {
+          if (input.checked) {
+            selectedColumns.add(key);
+          } else {
+            selectedColumns.delete(key);
+          }
+          render();
+        });
+      });
+    }
+
+    function applyPreset(name) {
+      selectedColumns = new Set(columnPresets[name] || columnPresets.core);
+      renderColumnPicker();
+      render();
+    }
+
+    function formatValue(value) {
+      return value === null || value === undefined ? "-" : value;
+    }
+
+    function numericDelta(a, b) {
+      const numA = Number(a);
+      const numB = Number(b);
+      if (!Number.isFinite(numA) || !Number.isFinite(numB)) {
+        return "";
+      }
+      const delta = numB - numA;
+      return delta.toFixed(2);
+    }
+
     function buildTable(rows) {
-      const columns = [
-        { key: "t", label: "t" },
-        { key: "policy_status", label: "status" },
-        { key: "premium", label: "premium" },
-        { key: "account_value_eop", label: "av_eop" },
-        { key: "cash_surrender_value", label: "csv" },
-        { key: "death_benefit", label: "db" }
-      ];
+      const columns = getSelectedColumns();
       const header = `<tr>${columns.map(col => `<th>${col.label}</th>`).join("")}</tr>`;
       const body = rows.map(row => {
-        const cells = columns.map(col => `<td>${row[col.key] ?? "-"}</td>`).join("");
+        const cells = columns.map(col => `<td>${formatValue(row[col.key])}</td>`).join("");
         const cls = row.policy_status === "lapsed" ? "lapsed" : "";
         return `<tr class="${cls}">${cells}</tr>`;
       }).join("");
       ledgerEl.innerHTML = header + body;
+    }
+
+    function buildDiffTable(currentRows, guaranteedRows) {
+      const columns = getSelectedColumns();
+      const header = `<tr>${columns.map(col => `<th>${col.label}</th>`).join("")}</tr>`;
+      const maxLen = Math.max(currentRows.length, guaranteedRows.length);
+      const rows = [];
+
+      for (let i = 0; i < maxLen; i++) {
+        const a = currentRows[i] || {};
+        const b = guaranteedRows[i] || {};
+        const rowClass = a.policy_status === "lapsed" || b.policy_status === "lapsed" ? "lapsed" : "";
+        const cells = columns.map((col) => {
+          const valA = a[col.key];
+          const valB = b[col.key];
+          const same = valA === valB;
+          const delta = same ? "" : numericDelta(valA, valB);
+          const suffix = delta ? ` (delta ${delta})` : "";
+          const text = same
+            ? `${formatValue(valA)}`
+            : `${formatValue(valA)} -> ${formatValue(valB)}${suffix}`;
+          const cls = same ? "diff-same" : "diff-cell";
+          return `<td class="${cls}">${text}</td>`;
+        }).join("");
+        rows.push(`<tr class="${rowClass}">${cells}</tr>`);
+      }
+
+      ledgerEl.innerHTML = header + rows.join("");
     }
 
     function firstDiff(currentRows, guaranteedRows) {
@@ -293,10 +495,55 @@ _HTML = """
       const guaranteedRows = result.ledgers.guaranteed.rows;
       diffEl.textContent = firstDiff(currentRows, guaranteedRows);
       if (scenario === "diff") {
-        buildTable(currentRows);
+        buildDiffTable(currentRows, guaranteedRows);
       } else {
         buildTable(result.ledgers[scenario].rows);
       }
+    }
+
+    function escapeCsvValue(value) {
+      if (value === null || value === undefined) {
+        return "";
+      }
+      const text = String(value);
+      if (text.includes("\"") || text.includes(",") || text.includes("\n")) {
+        return `"${text.replace(/\"/g, "\"\"")}"`;
+      }
+      return text;
+    }
+
+    function buildCsv(rows, columns) {
+      const header = columns.map((col) => escapeCsvValue(col.label)).join(",");
+      const body = rows.map((row) => {
+        return columns.map((col) => escapeCsvValue(row[col.key])).join(",");
+      }).join("\n");
+      return `${header}\n${body}`;
+    }
+
+    function buildDiffCsv(currentRows, guaranteedRows, columns) {
+      const header = columns.flatMap((col) => [
+        `${col.label}_current`,
+        `${col.label}_guaranteed`,
+        `${col.label}_delta`
+      ]).join(",");
+      const maxLen = Math.max(currentRows.length, guaranteedRows.length);
+      const bodyRows = [];
+      for (let i = 0; i < maxLen; i++) {
+        const a = currentRows[i] || {};
+        const b = guaranteedRows[i] || {};
+        const cells = columns.flatMap((col) => {
+          const valA = a[col.key];
+          const valB = b[col.key];
+          const delta = numericDelta(valA, valB);
+          return [
+            escapeCsvValue(valA),
+            escapeCsvValue(valB),
+            escapeCsvValue(delta)
+          ];
+        });
+        bodyRows.push(cells.join(","));
+      }
+      return `${header}\n${bodyRows.join("\n")}`;
     }
 
     runBtn.addEventListener("click", async () => {
@@ -340,6 +587,51 @@ _HTML = """
       }
       downloadJSON("opie_result.json", result);
     });
+
+    downloadCsvBtn.addEventListener("click", () => {
+      if (!result) {
+        setStatus("Run an illustration first.");
+        return;
+      }
+      const scenario = document.querySelector("input[name='scenario']:checked").value;
+      const columns = getSelectedColumns();
+      let csvText = "";
+      let filename = "opie_ledger.csv";
+      if (scenario === "diff") {
+        csvText = buildDiffCsv(result.ledgers.current.rows, result.ledgers.guaranteed.rows, columns);
+        filename = "opie_ledger_diff.csv";
+      } else {
+        csvText = buildCsv(result.ledgers[scenario].rows, columns);
+        filename = `opie_ledger_${scenario}.csv`;
+      }
+      downloadCSV(filename, csvText);
+      setStatus("CSV downloaded.");
+    });
+
+    copyRequestBtn.addEventListener("click", () => {
+      let payload;
+      try {
+        payload = JSON.parse(requestEl.value);
+      } catch (err) {
+        setStatus("Invalid JSON in request.");
+        return;
+      }
+      copyText("Request", JSON.stringify(payload, null, 2));
+    });
+
+    copyResultBtn.addEventListener("click", () => {
+      if (!result) {
+        setStatus("Run an illustration first.");
+        return;
+      }
+      copyText("Result", JSON.stringify(result, null, 2));
+    });
+
+    colsCoreBtn.addEventListener("click", () => applyPreset("core"));
+    colsValueBtn.addEventListener("click", () => applyPreset("values"));
+    colsChargesBtn.addEventListener("click", () => applyPreset("charges"));
+    colsLoansBtn.addEventListener("click", () => applyPreset("loans"));
+    colsAllBtn.addEventListener("click", () => applyPreset("all"));
 
     document.querySelectorAll("input[name='scenario']").forEach((input) => {
       input.addEventListener("change", render);
