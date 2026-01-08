@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "name": "ul_simple",
+      "request": "../examples/ul_simple_request.json",
+      "expected_current": "../tests/golden/ul_simple_current.json",
+      "expected_guaranteed": "../tests/golden/ul_simple_guaranteed.json"
+    },
+    {
+      "name": "term",
+      "request": "../examples/term_request.json",
+      "expected_current": "../tests/golden/term_current.json",
+      "expected_guaranteed": "../tests/golden/term_guaranteed.json"
+    }
+  ]
+}

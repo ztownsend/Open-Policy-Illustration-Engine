@@ -1,0 +1,15 @@
+{
+  "product_code": "level_term",
+  "issue_age": 40,
+  "issue_gender": "F",
+  "risk_class": "NT",
+  "face_amount": "250000",
+  "issue_date": "2025-01-01",
+  "duration_months": 36,
+  "term_length_months": 24,
+  "premium_schedule": null,
+  "scenarios": {
+    "current": {"annual_premium": "600"},
+    "guaranteed": {"annual_premium": "600"}
+  }
+}

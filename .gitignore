@@ -1,0 +1,46 @@
+# macOS
+.DS_Store
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test/coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Type check / lint caches
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# IDEs/editors
+.vscode/
+.idea/
+
+# Logs and temp
+*.log
+.tmp/
+temp/
+
+# Environment files
+.env
+
+# Jupyter
+.ipynb_checkpoints/

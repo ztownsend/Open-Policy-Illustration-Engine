@@ -1,0 +1,32 @@
+{
+  "product_code": "annuity_deferred",
+  "issue_age": 60,
+  "issue_gender": "M",
+  "risk_class": "NT",
+  "face_amount": "10000",
+  "issue_date": "2024-01-01",
+  "duration_months": 12,
+  "premium_schedule": [
+    {
+      "start_month": 1,
+      "end_month": 12,
+      "amount": "200"
+    }
+  ],
+  "scenarios": {
+    "current": {
+      "crediting_rate_annual": "0.03",
+      "surrender_charge_schedule": {
+        "1": "100",
+        "12": "0"
+      }
+    },
+    "guaranteed": {
+      "crediting_rate_annual": "0.01",
+      "surrender_charge_schedule": {
+        "1": "200",
+        "12": "0"
+      }
+    }
+  }
+}

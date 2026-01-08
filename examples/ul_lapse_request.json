@@ -1,0 +1,32 @@
+{
+  "product_code": "simple_ul",
+  "issue_age": 45,
+  "issue_gender": "F",
+  "risk_class": "NT",
+  "face_amount": "100000",
+  "issue_date": "2025-01-01",
+  "duration_months": 12,
+  "premium_schedule": [
+    {"start_month": 1, "end_month": 3, "amount": "200"}
+  ],
+  "scenarios": {
+    "current": {
+      "crediting_rate_annual": "0.00",
+      "premium_load_pct": "0.00",
+      "monthly_policy_fee": "100",
+      "monthly_per_thousand_admin_fee": "0.50",
+      "coi_table": {"45": "0.00", "46": "0.00"},
+      "surrender_charge_schedule": {"1": "0"}
+    },
+    "guaranteed": {
+      "crediting_rate_annual": "0.00",
+      "premium_load_pct": "0.00",
+      "monthly_policy_fee": "100",
+      "monthly_per_thousand_admin_fee": "0.50",
+      "coi_table": {"45": "0.00", "46": "0.00"},
+      "surrender_charge_schedule": {"1": "0"}
+    }
+  },
+  "death_benefit_option": "level",
+  "minimum_account_value_floor": "0"
+}
