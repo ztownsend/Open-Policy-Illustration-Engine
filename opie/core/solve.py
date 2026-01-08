@@ -15,8 +15,10 @@ from opie.core.types import (
     PolicyStatus,
     PremiumScheduleEntry,
     SolveMetadata,
+    Tax7702Report,
     build_metadata,
 )
+from opie.tax.irc_7702 import run_7702_checks
 from opie.products.base import ProductHooks
 
 ZERO = Decimal("0")
@@ -135,7 +137,21 @@ def solve_illustration(request: IllustrationRequest, hooks: ProductHooks) -> Ill
         strategy=strategy,
         solved_premiums=solved_premiums,
     )
-    metadata = build_metadata(request, solve=solve_meta)
+
+    tax_7702_reports: dict[str, Tax7702Report] = {}
+    for scenario_name in ("current", "guaranteed"):
+        scenario = getattr(request.scenarios, scenario_name)
+        report = run_7702_checks(
+            ledgers[scenario_name],
+            scenario,
+            request,
+            scenario_name=scenario_name,
+        )
+        if report is not None:
+            tax_7702_reports[scenario_name] = report
+    tax_7702_payload = tax_7702_reports or None
+
+    metadata = build_metadata(request, tax_7702=tax_7702_payload, solve=solve_meta)
 
     ledgers_by_currency = build_reporting_ledgers(request, ledgers)
     return IllustrationResult(

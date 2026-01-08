@@ -324,6 +324,29 @@ class SolveMetadata(StrictBaseModel):
     solved_premiums: dict[str, Decimal]
 
 
+class Tax7702Failure(StrictBaseModel):
+    t: int
+    test: Literal["gpt", "cvat"]
+    value: Decimal
+    limit: Decimal
+    reason: str
+
+
+class Tax7702DebugRow(StrictBaseModel):
+    t: int
+    test: Literal["gpt", "cvat"]
+    value: Decimal
+    limit: Decimal
+
+
+class Tax7702Report(StrictBaseModel):
+    test_type: Literal["gpt", "cvat", "both"]
+    status: Literal["pass", "fail"]
+    first_failure_t: int | None
+    failures: list[Tax7702Failure]
+    tax_7702_debug: list[Tax7702DebugRow] | None = None
+
+
 class IllustrationMetadata(StrictBaseModel):
     calc_version: str
     schema_version: str
@@ -332,12 +355,14 @@ class IllustrationMetadata(StrictBaseModel):
     reporting_currencies: list[CurrencyCode] | None = None
     fx_rates: dict[CurrencyCode, Decimal] | None = None
     reporting_include_debug_fields: bool | None = None
+    tax_7702: dict[str, Tax7702Report] | None = None
     solve: SolveMetadata | None = None
 
 
 def build_metadata(
     request: "IllustrationRequest | None" = None,
     *,
+    tax_7702: dict[str, Tax7702Report] | None = None,
     solve: SolveMetadata | None = None,
 ) -> IllustrationMetadata:
     if request is None:
@@ -346,6 +371,7 @@ def build_metadata(
             schema_version=SCHEMA_VERSION,
             rounding_policy_id=ROUNDING_POLICY_ID,
             currency_code=CurrencyCode.USD,
+            tax_7702=tax_7702,
             solve=solve,
         )
     return IllustrationMetadata(
@@ -358,6 +384,7 @@ def build_metadata(
         reporting_include_debug_fields=(
             request.reporting_include_debug_fields if request.reporting_currencies else None
         ),
+        tax_7702=tax_7702,
         solve=solve,
     )
 

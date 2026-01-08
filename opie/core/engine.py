@@ -18,10 +18,12 @@ from opie.core.types import (
     Ledger,
     LedgerRow,
     PolicyStatus,
+    Tax7702Report,
     build_metadata,
 )
 from opie.products.base import ProductHooks
 from opie.products.riders.registry import get_rider_hook
+from opie.tax.irc_7702 import run_7702_checks
 
 ZERO = Decimal("0")
 ONE = Decimal("1")
@@ -237,6 +239,19 @@ def run_illustration(request: IllustrationRequest, hooks: ProductHooks) -> Illus
     if not ledgers:
         raise EngineError("No scenarios executed", product_code=request.product_code)
 
+    tax_7702_reports: dict[str, Tax7702Report] = {}
+    for scenario_name in ("current", "guaranteed"):
+        scenario = getattr(request.scenarios, scenario_name)
+        report = run_7702_checks(
+            ledgers[scenario_name],
+            scenario,
+            request,
+            scenario_name=scenario_name,
+        )
+        if report is not None:
+            tax_7702_reports[scenario_name] = report
+    tax_7702_payload = tax_7702_reports or None
+
     ledgers_by_currency = build_reporting_ledgers(request, ledgers)
     return IllustrationResult(
         request_id=_request_id(request),
@@ -244,5 +259,5 @@ def run_illustration(request: IllustrationRequest, hooks: ProductHooks) -> Illus
         currency_code=request.currency_code,
         ledgers=ledgers,
         ledgers_by_currency=ledgers_by_currency,
-        metadata=build_metadata(request),
+        metadata=build_metadata(request, tax_7702=tax_7702_payload),
     )

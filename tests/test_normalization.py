@@ -6,6 +6,7 @@ from opie.assumptions.loaders import load_annuity_assumptions, load_ul_assumptio
 from opie.assumptions.models import (
     AnnuityScenarioAssumptions,
     TermScenarioAssumptions,
+    Tax7702Assumptions,
     ULScenarioAssumptions,
     WLScenarioAssumptions,
 )
@@ -77,3 +78,30 @@ def test_load_annuity_assumptions_quantizes_schedule() -> None:
     }
     scenario = load_annuity_assumptions(payload, currency_code=CurrencyCode.EUR)
     assert scenario.surrender_charge_schedule[1] == Decimal("1.01")
+
+
+def test_normalize_tax_7702_quantizes_money_fields() -> None:
+    tax = Tax7702Assumptions(
+        enabled=True,
+        test_type="both",
+        gpt_guideline_single_premium=Decimal("1.005"),
+        gpt_guideline_level_premium_annual=Decimal("2.005"),
+        cvat_net_single_premium=Decimal("3.005"),
+        cvat_cash_value_adjustment=Decimal("4.005"),
+        tolerance=Decimal("0.005"),
+    )
+    scenario = ULScenarioAssumptions(
+        crediting_rate_annual=Decimal("0.04"),
+        premium_load_pct=Decimal("0.01"),
+        monthly_policy_fee=Decimal("1.00"),
+        monthly_per_thousand_admin_fee=Decimal("0.00"),
+        coi_table={30: Decimal("0.20")},
+        surrender_charge_schedule={1: Decimal("0")},
+        tax_7702=tax,
+    )
+    normalized = normalize_scenario_money(scenario, CurrencyCode.EUR)
+    assert normalized.tax_7702.gpt_guideline_single_premium == Decimal("1.01")
+    assert normalized.tax_7702.gpt_guideline_level_premium_annual == Decimal("2.01")
+    assert normalized.tax_7702.cvat_net_single_premium == Decimal("3.01")
+    assert normalized.tax_7702.cvat_cash_value_adjustment == Decimal("4.01")
+    assert normalized.tax_7702.tolerance == Decimal("0.01")

@@ -17,3 +17,4 @@ def test_result_metadata_defaults_to_version_constants() -> None:
     assert result.metadata.reporting_currencies is None
     assert result.metadata.fx_rates is None
     assert result.metadata.reporting_include_debug_fields is None
+    assert result.metadata.tax_7702 is None

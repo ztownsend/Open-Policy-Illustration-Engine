@@ -32,6 +32,8 @@ def _normalize_for_json(value: Any) -> Any:
                 key_str = str(key)
             if key_str.startswith("debug_") and val is None:
                 continue
+            if key_str == "tax_7702_debug" and val is None:
+                continue
             normalized[key_str] = _normalize_for_json(val)
         return normalized
     if isinstance(value, (list, tuple)):

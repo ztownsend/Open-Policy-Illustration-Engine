@@ -1,6 +1,6 @@
 # Plan: IRC 7702 (GPT + CVAT) Checker
 
-Status: draft
+Status: implemented (2026-01-08)
 Created: 2026-01-08
 Owner: OPIE
 

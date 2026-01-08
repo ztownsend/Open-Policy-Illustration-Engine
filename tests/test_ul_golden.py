@@ -46,3 +46,7 @@ def test_ul_simple_effective_golden() -> None:
 
 def test_ul_lapse_golden() -> None:
     _assert_golden(Path("examples/ul_lapse_request.json"), "ul_lapse")
+
+
+def test_ul_simple_7702_golden() -> None:
+    _assert_golden(Path("examples/ul_simple_7702_request.json"), "ul_simple_7702")

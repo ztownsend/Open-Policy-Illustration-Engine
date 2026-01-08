@@ -315,6 +315,82 @@ def test_btc_precision_rejects_more_than_eight_decimals() -> None:
         IllustrationRequest.model_validate(payload)
 
 
+def test_tax_7702_requires_gpt_inputs_when_enabled() -> None:
+    payload = {
+        "product_code": "simple_ul",
+        "issue_age": 35,
+        "issue_gender": "M",
+        "risk_class": "NT",
+        "face_amount": "250000",
+        "issue_date": "2025-01-01",
+        "duration_months": 12,
+        "premium_schedule": [{"start_month": 1, "end_month": 12, "amount": "150"}],
+        "scenarios": {
+            "current": {
+                "crediting_rate_annual": "0.04",
+                "premium_load_pct": "0.06",
+                "monthly_policy_fee": "5",
+                "monthly_per_thousand_admin_fee": "0.10",
+                "coi_table": {"35": "0.20"},
+                "surrender_charge_schedule": {"1": "100"},
+                "tax_7702": {"enabled": True, "test_type": "gpt"},
+            },
+            "guaranteed": {
+                "crediting_rate_annual": "0.03",
+                "premium_load_pct": "0.06",
+                "monthly_policy_fee": "5",
+                "monthly_per_thousand_admin_fee": "0.10",
+                "coi_table": {"35": "0.25"},
+                "surrender_charge_schedule": {"1": "150"},
+                "tax_7702": {"enabled": True, "test_type": "gpt"},
+            },
+        },
+        "death_benefit_option": "level",
+        "minimum_account_value_floor": "0",
+    }
+
+    with pytest.raises(ValueError):
+        IllustrationRequest.model_validate(payload)
+
+
+def test_tax_7702_requires_cvat_nsp_when_enabled() -> None:
+    payload = {
+        "product_code": "simple_ul",
+        "issue_age": 35,
+        "issue_gender": "M",
+        "risk_class": "NT",
+        "face_amount": "250000",
+        "issue_date": "2025-01-01",
+        "duration_months": 12,
+        "premium_schedule": [{"start_month": 1, "end_month": 12, "amount": "150"}],
+        "scenarios": {
+            "current": {
+                "crediting_rate_annual": "0.04",
+                "premium_load_pct": "0.06",
+                "monthly_policy_fee": "5",
+                "monthly_per_thousand_admin_fee": "0.10",
+                "coi_table": {"35": "0.20"},
+                "surrender_charge_schedule": {"1": "100"},
+                "tax_7702": {"enabled": True, "test_type": "cvat"},
+            },
+            "guaranteed": {
+                "crediting_rate_annual": "0.03",
+                "premium_load_pct": "0.06",
+                "monthly_policy_fee": "5",
+                "monthly_per_thousand_admin_fee": "0.10",
+                "coi_table": {"35": "0.25"},
+                "surrender_charge_schedule": {"1": "150"},
+                "tax_7702": {"enabled": True, "test_type": "cvat"},
+            },
+        },
+        "death_benefit_option": "level",
+        "minimum_account_value_floor": "0",
+    }
+
+    with pytest.raises(ValueError):
+        IllustrationRequest.model_validate(payload)
+
+
 def test_request_normalizes_withdrawal_and_loan_schedules() -> None:
     payload = {
         "product_code": "level_term",

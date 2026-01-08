@@ -22,3 +22,11 @@ def test_reporting_ledgers_are_deterministic() -> None:
     first = dumps_json(run_illustration(request))
     second = dumps_json(run_illustration(request))
     assert first == second
+
+
+def test_tax_7702_reports_are_deterministic() -> None:
+    payload = json.loads(Path("examples/ul_simple_7702_request.json").read_text())
+    request = IllustrationRequest.model_validate(payload)
+    first = dumps_json(run_illustration(request))
+    second = dumps_json(run_illustration(request))
+    assert first == second
