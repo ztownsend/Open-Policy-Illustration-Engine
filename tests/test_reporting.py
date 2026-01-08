@@ -133,6 +133,7 @@ def test_reporting_allows_base_currency_with_fx_rate() -> None:
     converted_row = result.ledgers_by_currency[CurrencyCode.USD]["current"].rows[0]
     assert converted_row.premium == base_row.premium
 
+
 def test_reporting_converts_monetary_fields() -> None:
     request = _term_request_with_reporting(fx_rate=Decimal("0.5"))
     result = run_illustration(request)

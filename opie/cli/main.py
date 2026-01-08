@@ -37,9 +37,7 @@ def illustrate(
     currency: str | None = typer.Option(None, "--currency"),
     reporting_currencies: list[str] | None = typer.Option(None, "--reporting-currencies"),
     fx_rate: list[str] | None = typer.Option(None, "--fx-rate"),
-    reporting_include_debug_fields: bool = typer.Option(
-        False, "--reporting-include-debug-fields"
-    ),
+    reporting_include_debug_fields: bool = typer.Option(False, "--reporting-include-debug-fields"),
 ) -> None:
     if format not in {"json", "csv"}:
         raise typer.BadParameter("format must be json or csv")
@@ -53,9 +51,7 @@ def illustrate(
     if reporting_currencies:
         if len(reporting_currencies) == 1 and "," in reporting_currencies[0]:
             reporting_currencies = [
-                code.strip()
-                for code in reporting_currencies[0].split(",")
-                if code.strip()
+                code.strip() for code in reporting_currencies[0].split(",") if code.strip()
             ]
         overrides["reporting_currencies"] = reporting_currencies
     if fx_rate:

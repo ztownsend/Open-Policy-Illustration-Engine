@@ -154,9 +154,7 @@ def _check_common_rows(ledger: Ledger, *, currency_code: CurrencyCode) -> None:
         prev_cumulative = row.cumulative_premium
 
 
-def check_ul_invariants(
-    ledger: Ledger, *, currency_code: CurrencyCode = CurrencyCode.USD
-) -> None:
+def check_ul_invariants(ledger: Ledger, *, currency_code: CurrencyCode = CurrencyCode.USD) -> None:
     _check_common_rows(ledger, currency_code=currency_code)
     for row in ledger.rows:
         _check_cash_value_invariants(row)
@@ -190,9 +188,7 @@ def check_term_invariants(
             _ensure(row.death_benefit == ZERO, "DB not zero on expired term", t=row.t)
 
 
-def check_wl_invariants(
-    ledger: Ledger, *, currency_code: CurrencyCode = CurrencyCode.USD
-) -> None:
+def check_wl_invariants(ledger: Ledger, *, currency_code: CurrencyCode = CurrencyCode.USD) -> None:
     _check_common_rows(ledger, currency_code=currency_code)
     for row in ledger.rows:
         _check_cash_value_invariants(row)

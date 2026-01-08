@@ -107,9 +107,7 @@ def load_scenario_set(
         return ScenarioSet(current=current, guaranteed=guaranteed)
 
     if product_code in {"annuity_deferred", "annuity_spia"}:
-        current = load_annuity_assumptions(
-            data.get("current", {}), currency_code=currency_code
-        )
+        current = load_annuity_assumptions(data.get("current", {}), currency_code=currency_code)
         guaranteed = load_annuity_assumptions(
             data.get("guaranteed", {}), currency_code=currency_code
         )

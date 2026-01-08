@@ -57,9 +57,7 @@ def main() -> int:
         if result.ledgers_by_currency:
             for currency_code, ledgers in result.ledgers_by_currency.items():
                 currency_label = (
-                    currency_code.value
-                    if hasattr(currency_code, "value")
-                    else str(currency_code)
+                    currency_code.value if hasattr(currency_code, "value") else str(currency_code)
                 )
                 for scenario in ("current", "guaranteed"):
                     output = {
@@ -70,8 +68,7 @@ def main() -> int:
                         "ledger": ledgers[scenario],
                     }
                     output_path = (
-                        golden_dir
-                        / f"{base_name}_{currency_label.lower()}_{scenario}.json"
+                        golden_dir / f"{base_name}_{currency_label.lower()}_{scenario}.json"
                     )
                     output_text = dumps_json(output)
                     output_path.write_text(output_text)

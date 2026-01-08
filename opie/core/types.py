@@ -215,9 +215,7 @@ class IllustrationRequest(StrictBaseModel):
             self.reporting_currencies = unique_currencies
 
         missing = [
-            currency
-            for currency in self.reporting_currencies
-            if currency not in self.fx_rates
+            currency for currency in self.reporting_currencies if currency not in self.fx_rates
         ]
         if missing:
             missing_codes = ", ".join([code.value for code in missing])
@@ -244,9 +242,7 @@ class IllustrationRequest(StrictBaseModel):
                 normalized_schedule.append(
                     entry.model_copy(
                         update={
-                            "amount": quantize_money_input(
-                                entry.amount, currency_code, label=label
-                            )
+                            "amount": quantize_money_input(entry.amount, currency_code, label=label)
                         }
                     )
                 )

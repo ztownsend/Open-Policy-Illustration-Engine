@@ -44,9 +44,7 @@ DEBUG_FIELDS = (
 )
 
 
-def _convert_amount(
-    value: Decimal, fx_rate: Decimal, target_currency: CurrencyCode
-) -> Decimal:
+def _convert_amount(value: Decimal, fx_rate: Decimal, target_currency: CurrencyCode) -> Decimal:
     return quantize_money(value * fx_rate, target_currency)
 
 

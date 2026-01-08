@@ -28,9 +28,7 @@ def test_quantize_money_rejects_unknown_currency() -> None:
 
 
 def test_quantize_money_input_allows_btc_precision() -> None:
-    assert quantize_money_input(Decimal("0.00000001"), CurrencyCode.BTC) == Decimal(
-        "0.00000001"
-    )
+    assert quantize_money_input(Decimal("0.00000001"), CurrencyCode.BTC) == Decimal("0.00000001")
 
 
 def test_quantize_money_input_rejects_btc_over_precision() -> None:
