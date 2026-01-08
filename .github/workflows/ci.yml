@@ -2,20 +2,42 @@ name: ci
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: test (${{ matrix.os }}, py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.14"]
     env:
       UV_NO_EDITABLE: "1"
+      UV_PYTHON: ${{ matrix.python }}
+      PYTHONHASHSEED: "0"
     steps:
       - uses: actions/checkout@v4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
+        with:
+          cache: true
 
-      - name: Sync deps
-        run: uv sync
+      - name: Install Python
+        run: uv python install ${{ matrix.python }}
+
+      - name: Sync deps (frozen)
+        run: uv sync --frozen --dev
 
       - name: CLI smoke
         run: uv run opie --help
@@ -23,5 +45,51 @@ jobs:
       - name: Lint
         run: uv run ruff check .
 
+      - name: Format check
+        run: uv run ruff format --check .
+
+      - name: Prepare test artifacts
+        run: uv run python -c "from pathlib import Path; Path('.artifacts').mkdir(exist_ok=True)"
+
       - name: Run tests
-        run: uv run pytest
+        run: >
+          uv run pytest
+          --junitxml .artifacts/junit.xml
+          --cov=opie
+          --cov=opie_ui
+          --cov=opie_pdf
+          --cov-report=xml:.artifacts/coverage.xml
+          --cov-report=term-missing
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-${{ matrix.os }}-py${{ matrix.python }}
+          path: .artifacts
+
+  conformance:
+    name: conformance (ubuntu-latest, py3.14)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: test
+    env:
+      UV_NO_EDITABLE: "1"
+      UV_PYTHON: "3.14"
+      PYTHONHASHSEED: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          cache: true
+
+      - name: Install Python
+        run: uv python install 3.14
+
+      - name: Sync deps (frozen)
+        run: uv sync --frozen --dev
+
+      - name: Run conformance
+        run: uv run opie conformance run --manifest conformance/cases.json

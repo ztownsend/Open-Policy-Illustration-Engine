@@ -10,7 +10,7 @@ A quick orientation to the repository layout and entry points.
 - `tests/` - unit tests + golden tests
 - `scripts/` - tooling (golden updates, benchmark)
 - `conformance/` - canonical cases manifest
-- `docs/` - specs, architecture, roadmaps
+- `docs/` - specs, architecture, roadmaps, testing plan
 
 ## Core Engine
 - `opie/core/engine.py` - monthly loop + scenario runner (normative ordering)
@@ -74,3 +74,10 @@ A quick orientation to the repository layout and entry points.
 ## Tests
 - `tests/golden/` - output contract files
 - `tests/test_*` - unit + golden + CLI/API/UI/PDF tests
+
+## Docs
+- `docs/opie_mvp_spec.md` - normative MVP spec for current implementation
+- `docs/opie_technical_architecture.md` - module boundaries + extension points
+- `docs/opie_roadmap.md` - execution roadmap
+- `docs/opie-strategic-roadmap.md` - multi-year vision
+- `docs/testing_plan.md` - comprehensive testing plan

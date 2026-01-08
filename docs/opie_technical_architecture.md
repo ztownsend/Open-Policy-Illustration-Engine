@@ -307,7 +307,8 @@ Responsibilities:
 - parse request body
 - call `run_illustration`
 - return JSON response
-- convert errors into structured HTTP errors (400 validation, 422 schema, 500 internal)
+- return deterministic JSON via `dumps_json`
+- rely on FastAPI defaults for validation errors (422) and unhandled errors (500)
 
 ---
 
@@ -333,6 +334,8 @@ This is critical for debugging golden diffs (“off by a penny in month 47”).
 ---
 
 ## 11) Testing Architecture
+
+See `docs/testing_plan.md` for the full testing strategy and coverage targets.
 
 ### 11.1 Golden tests
 - Each product/scenario has golden JSON in `tests/golden/`.

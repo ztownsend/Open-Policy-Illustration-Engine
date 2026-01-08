@@ -52,6 +52,7 @@ Open Policy Illustration Engine (OPIE) is a deterministic, versioned life-insura
 ## UI Explorer
 - `uv run uvicorn opie_ui.app:app --reload`
 - Visit `http://localhost:8000/` (API mounted at `/api`)
+- Features: scenario diff view, column presets, CSV export, copy request/result.
 
 ## PDF Renderer
 - Programmatic use:
@@ -95,3 +96,4 @@ Goldens are the output contract.
 - Technical architecture: `docs/opie_technical_architecture.md`
 - Roadmaps: `docs/opie_roadmap.md`, `docs/opie-strategic-roadmap.md`
 - Code map: `docs/codemap.md`
+- Testing plan: `docs/testing_plan.md`

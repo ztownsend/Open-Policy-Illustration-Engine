@@ -17,6 +17,8 @@ OPIE is a **deterministic, versioned policy illustration engine** that produces 
 - **No floats** in calculations. Use `decimal.Decimal`.
 - The same request must produce **byte-identical** normalized output across runs and platforms.
 - JSON output must be stable (sorted keys, stable Decimal encoding).
+- On Python 3.14, prefer non-editable installs for the CLI entrypoint
+  (`UV_NO_EDITABLE=1 uv sync`).
 
 ### 1.2 Normative ordering
 The calculation ordering in the spec is **authoritative**. Do not reorder operations “for readability.”
@@ -56,6 +58,10 @@ All product variability must live behind product hooks.
 - `opie/products/base.py` — `ProductHooks` Protocol and hook result contracts
 - `opie/products/ul_simple.py` — SimpleUL hooks
 - `opie/products/term_level.py` — LevelTerm hooks
+- `opie/products/wl_nonpar.py` — Non-par Whole Life hooks
+- `opie/products/annuity_deferred.py` — Deferred annuity hooks
+- `opie/products/annuity_spia.py` — SPIA hooks (toy)
+- `opie/products/riders/*` — Rider hooks + registry
 - `opie/products/registry.py` — product_code → hooks mapping
 
 ### Assumptions
@@ -63,16 +69,20 @@ All product variability must live behind product hooks.
 - `opie/assumptions/tables.py` — COI table load + lookup
 - `opie/assumptions/schedules.py` — surrender schedules
 - `opie/assumptions/loaders.py` — loading/validation/normalization
+- `opie/assumptions/packs.py` — pack manifest + validation
 
 ### Interfaces
 - `opie/__init__.py` — exports `run_illustration()`
 - `opie/cli/main.py` — CLI entrypoint
 - `opie/api/app.py` — FastAPI app
+- `opie_ui/app.py` — UI Explorer
+- `opie_pdf/render.py` — PDF renderer
 
 ### Tests / Goldens
 - `tests/golden/*` — committed expected outputs
 - `tests/test_*` — golden tests, invariants tests, determinism tests
 - `scripts/update_golden.py` — the ONLY supported way to regenerate goldens
+- `conformance/cases.json` — canonical conformance manifest
 
 ---
 
@@ -99,7 +109,8 @@ A “bad” diff:
 1) Read:
    - `docs/opie_mvp_spec.md`
    - `docs/opie_technical_architecture.md`
-   - `docs/roadmap.md` (for sequencing)
+   - `docs/opie_roadmap.md` (for sequencing)
+   - `docs/testing_plan.md`
 2) Identify which work item you’re implementing and its acceptance criteria.
 
 ### 4.2 Implement
@@ -114,11 +125,11 @@ You must add or update tests in the same diff:
 
 ### 4.4 Run commands locally
 Run (at minimum):
-- `pytest`
+- `uv run pytest`
 
 If configured:
-- `ruff check .`
-- `ruff format .`
+- `uv run ruff check .`
+- `uv run ruff format .`
 
 ### 4.5 If outputs changed
 Decide whether the change is:
@@ -253,8 +264,10 @@ Recommended (if configured):
 - `ruff format .`
 
 Interfaces:
-- `python -m opie.cli.main illustrate --in examples/ul_simple_request.json --out /tmp/out.json`
-- `uvicorn opie.api.app:app --reload`
+- `uv run opie --help`
+- `uv run opie illustrate --in examples/ul_simple_request.json --out /tmp/out.json`
+- `uv run opie conformance run --manifest conformance/cases.json`
+- `uv run uvicorn opie.api.app:app --reload`
 
 ---
 

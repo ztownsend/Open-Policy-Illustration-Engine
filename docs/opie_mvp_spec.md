@@ -154,20 +154,22 @@ Monthly ordering is authoritative:
 **Lapse semantics**
 - If `AV_mid_raw < 0`, policy lapses in month `t`.
 - Fatal month row is emitted with `AV_eop = 0` and `status = lapsed`.
-- Grace months allow temporary deficit before lapse.
+- Grace months allow temporary deficit before lapse; during grace months with
+  `AV_mid_raw < 0`, interest is zero and `AV_eop = 0` while status remains in-force.
 
 ---
 
 ## 9) Optional Features: Riders, Loans, Withdrawals, Solve
 **Riders**
 - Rider charges are added after base charges and included in `charges_assessed`.
-- Rider ordering is deterministic (registry order).
+- Rider ordering is deterministic (sorted by `rider_code`).
 
 **Loans and withdrawals (current implementation: UL only)**
 - Interest is credited before withdrawals/loans.
 - Loan interest accrues on the prior loan balance before repayment.
 - AV is reduced by withdrawal and loan draw.
 - CSV is computed after surrender charge and loan balance.
+- Non-UL products should leave these schedules empty; invariants enforce zeros.
 
 **Premium solve (simple_ul only)**
 - Binary search over a level premium applied to months `1..duration_months`.
@@ -224,4 +226,5 @@ Monthly ordering is authoritative:
 ## 13) Testing & Contracts
 - Golden files are the output contract and must be regenerated via the script.
 - Invariants guard against logical drift (CSV > AV, negative loan balance, etc.).
-- Conformance runner checks canonical cases.
+- Conformance runner checks canonical cases and reports a summary with a
+  first-diff pointer when failures occur.
