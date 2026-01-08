@@ -60,6 +60,44 @@ def test_pack_validation_failure(tmp_path: Path) -> None:
     assert "schedules.json" in result.mismatched_checksums
 
 
+def test_pack_signature_invalid(tmp_path: Path) -> None:
+    pack_dir = _write_pack(tmp_path)
+    manifest = load_manifest(pack_dir)
+    bad_manifest = manifest.model_copy(
+        update={"signature": PackSignature(method="stub-sha256", value="bad")}
+    )
+    (pack_dir / "pack.json").write_text(dumps_json(bad_manifest))
+    result = validate_pack(pack_dir)
+    assert result.signature_valid is False
+    assert result.valid is False
+
+
+def test_pack_signature_none_is_valid(tmp_path: Path) -> None:
+    pack_dir = _write_pack(tmp_path)
+    manifest = load_manifest(pack_dir)
+    updated = manifest.model_copy(update={"signature": PackSignature(method="none", value="")})
+    (pack_dir / "pack.json").write_text(dumps_json(updated))
+    result = validate_pack(pack_dir)
+    assert result.signature_valid is True
+    assert result.valid is True
+
+
+def test_pack_validation_detects_missing_file(tmp_path: Path) -> None:
+    pack_dir = _write_pack(tmp_path)
+    (pack_dir / "schedules.json").unlink()
+    result = validate_pack(pack_dir)
+    assert result.valid is False
+    assert "schedules.json" in result.missing_files
+
+
+def test_pack_validation_detects_extra_file(tmp_path: Path) -> None:
+    pack_dir = _write_pack(tmp_path)
+    (pack_dir / "extra.json").write_text("{}")
+    result = validate_pack(pack_dir)
+    assert result.valid is False
+    assert "extra.json" in result.extra_files
+
+
 def test_resolve_pack_root_accepts_pack_json(tmp_path: Path) -> None:
     pack_dir = _write_pack(tmp_path)
     pack_path = resolve_pack_root(pack_dir / "pack.json")

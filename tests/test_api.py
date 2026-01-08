@@ -14,3 +14,11 @@ def test_api_smoke() -> None:
     data = response.json()
     assert data["product_code"] == "level_term"
     assert "metadata" in data
+
+
+def test_api_validation_error() -> None:
+    client = TestClient(app)
+    response = client.post("/v1/illustrations", json={"product_code": "simple_ul"})
+    assert response.status_code == 422
+    payload = response.json()
+    assert "detail" in payload

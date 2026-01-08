@@ -57,5 +57,10 @@ def test_conformance_runner_fails(tmp_path: Path) -> None:
     assert report.failed_cases == 1
     assert report.summary.passed is False
     assert report.summary.diff_pointer is not None
+    assert report.diff_pointer is not None
+    assert report.diff_pointer.case == "term"
+    assert report.diff_pointer.scenario == "current"
+    assert report.diff_pointer.expected_path == str(bad_path)
+    assert report.diff_pointer.first_diff is not None
     case = report.cases[0]
     assert case.scenarios["current"].passed is False

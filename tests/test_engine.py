@@ -56,6 +56,33 @@ class DummyLapseHooks(DummyHooks):
         )
 
 
+class DummyShortfallHooks(DummyHooks):
+    def premium_and_loads(self, state, request, scenario):
+        if state.t == 1:
+            return PremiumResult(
+                premium=Decimal("10"),
+                premium_load=Decimal("0"),
+                net_premium_to_av=Decimal("10"),
+            )
+        return PremiumResult(
+            premium=Decimal("0"),
+            premium_load=Decimal("0"),
+            net_premium_to_av=Decimal("0"),
+        )
+
+    def monthly_charges(self, state, request, scenario, av_bop, premium_result):
+        if state.t == 1:
+            charges = Decimal("0")
+        else:
+            charges = Decimal("15")
+        return ChargeResult(
+            policy_fee=charges,
+            admin_fee=Decimal("0"),
+            coi_charge=Decimal("0"),
+            charges_total=charges,
+        )
+
+
 def _ul_request(duration_months: int) -> IllustrationRequest:
     scenario = ULScenarioAssumptions(
         crediting_rate_annual=Decimal("0.12"),
@@ -103,3 +130,32 @@ def test_engine_lapse_emits_fatal_month() -> None:
     assert row.interest_credited == Decimal("0.00")
     assert row.account_value_eop == Decimal("0.00")
     assert row.death_benefit == Decimal("0.00")
+
+
+def test_engine_charge_shortfall_when_insufficient_funds() -> None:
+    scenario = ULScenarioAssumptions(
+        crediting_rate_annual=Decimal("0.00"),
+        premium_load_pct=Decimal("0.06"),
+        monthly_policy_fee=Decimal("5"),
+        monthly_per_thousand_admin_fee=Decimal("0"),
+        coi_table={30: Decimal("0.20")},
+        surrender_charge_schedule={1: Decimal("0")},
+    )
+    request = IllustrationRequest(
+        product_code="simple_ul",
+        issue_age=30,
+        issue_gender="M",
+        risk_class="NT",
+        face_amount=Decimal("100000"),
+        issue_date=date(2025, 1, 1),
+        duration_months=2,
+        premium_schedule=[{"start_month": 1, "end_month": 2, "amount": Decimal("100")}],
+        scenarios=ScenarioSet(current=scenario, guaranteed=scenario),
+    )
+    ledger = run_scenario(request, request.scenarios.current, "current", DummyShortfallHooks())
+    assert len(ledger.rows) == 2
+    row = ledger.rows[1]
+    assert row.policy_status == PolicyStatus.LAPSED
+    assert row.charges_assessed == Decimal("15.00")
+    assert row.charges_paid == Decimal("10.00")
+    assert row.charge_shortfall == Decimal("5.00")

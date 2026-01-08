@@ -16,3 +16,8 @@ def test_dumps_json_deterministic() -> None:
     first = dumps_json(payload)
     second = dumps_json(payload)
     assert first == second
+
+
+def test_dumps_json_omits_null_debug_fields() -> None:
+    payload = {"debug_alpha": None, "debug_beta": "1", "keep": 2}
+    assert dumps_json(payload) == '{"debug_beta":"1","keep":2}'

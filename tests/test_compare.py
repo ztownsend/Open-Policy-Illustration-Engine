@@ -19,3 +19,12 @@ def test_compare_payloads_match() -> None:
     result = compare_payloads(payload, payload)
     assert result.first_diff is None
     assert result.max_diff is None
+
+
+def test_compare_payloads_missing_row() -> None:
+    payload_a = {"ledger": {"rows": [{"t": 1, "premium": "10.00"}]}}
+    payload_b = {"ledger": {"rows": [{"t": 1, "premium": "10.00"}, {"t": 2, "premium": "10.00"}]}}
+    result = compare_payloads(payload_a, payload_b)
+    assert result.first_diff is not None
+    assert "Row missing in A" in result.first_diff
+    assert result.max_diff is None
