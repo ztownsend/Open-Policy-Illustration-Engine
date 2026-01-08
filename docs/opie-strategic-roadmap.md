@@ -12,9 +12,9 @@ OPIE becomes the reference implementation for life insurance illustrations—the
 ---
 
 ## Status (as of 2026-01-08)
-- **Completed**: Phase 0 foundations, Phase 1 MVP engine, Phase 2 core debugging tools, Phase 3 UL completeness, Phase 4 initial product breadth (WL + annuities), Phase 8 baseline packs/batch/bundles, Phase 9 baseline conformance + explorer UI.
-- **Partially complete**: Riders framework (hooks + example rider), product breadth (WL/annuity are simplified), enterprise features (batch/pack/bundle without parallelism/governance), PDF renderer (minimal, non-compliant).
-- **Not started**: Indexed products, compliance/regulatory features, plugin marketplace, certification, multi-tenant governance, advanced UI tooling.
+- **Completed**: Phase 1 MVP engine; Phase 3 UL completeness; baseline batch/pack/bundle tooling; conformance runner + comparison tools; UI Explorer; minimal PDF renderer.
+- **Partially complete**: Phase 0 foundations (mypy/type-check missing), Phase 2 debugging (scenario-to-scenario diff missing), Phase 4 product breadth (WL + annuities simplified; SPIA payout/annuitization pending), Phase 6 riders (framework only), Phase 7 compliance (no NAIC/AG49), Phase 8 enterprise features (no parallelism/governance), Phase 9 platform & ecosystem (marketplace/certification pending).
+- **Not started**: Phase 5 indexed products; Phase 10 industry standard adoption.
 ---
 
 ## Milestone Summary
@@ -166,7 +166,7 @@ OPIE becomes the reference implementation for life insurance illustrations—the
 - [ ] WL-specific ledger fields (paid-up additions placeholder)
 - [x] Deferred annuity accumulation engine (basic)
 - [ ] Annuitization value calculation
-- [ ] SPIA payout ledger (payout schedule not yet implemented)
+- [ ] SPIA payout ledger (payout schedule not yet implemented; current SPIA is accumulation-only)
 - [ ] Mortality table loading (for SPIA factors)
 - [x] Product comparison harness (compare tooling)
 
@@ -386,7 +386,7 @@ AG49 (and AG49-A, AG49-B) compliance is Phase 7. This phase builds the mechanics
 - [x] OPIE Explorer (web-based illustration viewer, minimal)
 - [ ] Assumption editor UI
 - [ ] Product configurator UI
-- [ ] Scenario comparison visualization
+- [x] Scenario comparison visualization (basic diff view)
 - [ ] Embeddable illustration widget
 
 ### Deliverables
@@ -462,7 +462,7 @@ AG49 (and AG49-A, AG49-B) compliance is Phase 7. This phase builds the mechanics
 - [ ] API reference (auto-generated)
 - [ ] Product implementation guide
 - [ ] Assumption specification guide
-- [ ] Calculation methodology documentation
+- [x] Calculation methodology documentation
 - [ ] Contributor guide
 - [ ] Architecture decision records (ADRs)
 - [ ] Changelog and migration guides
@@ -500,7 +500,7 @@ AG49 (and AG49-A, AG49-B) compliance is Phase 7. This phase builds the mechanics
 | Simple UL | 1 | Medium | Core engine demo |
 | Non-Par Whole Life | 4 | Medium | Table-driven |
 | Deferred Fixed Annuity | 4 | Medium | Accumulation |
-| SPIA | 4 | Low | Payout only |
+| SPIA | 4 | Low | Toy accumulation only; payout schedule TBD |
 | Indexed UL | 5 | High | Multiple strategies |
 | Fixed Indexed Annuity | 5 | High | Similar to IUL |
 | Variable UL | Future | Very High | Separate accounts, fund selection |

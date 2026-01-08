@@ -212,6 +212,12 @@ Monthly ordering is authoritative:
 - UI Explorer: `opie_ui.app`
 - PDF renderer: `opie_pdf.render`
 - Golden update script: `scripts/update_golden.py`
+- Assumption packs (`pack.json`) include:
+  - `name`, `version`, `license`, `source`
+  - `effective_date` (ISO-8601)
+  - `lineage` (parents list + notes)
+  - `files`: list of `{path, checksum}` sorted by path
+  - `signature`: `{method, value, key_id?}` (stub-sha256 today)
 
 ---
 

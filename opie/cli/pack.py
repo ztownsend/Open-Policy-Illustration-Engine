@@ -38,9 +38,11 @@ def validate(
     result = validate_pack(root)
     payload = {
         "valid": result.valid,
-        "expected_checksum": result.manifest.checksum,
-        "computed_checksum": result.computed_checksum,
         "files": result.files,
+        "missing_files": result.missing_files,
+        "extra_files": result.extra_files,
+        "mismatched_checksums": result.mismatched_checksums,
+        "signature_valid": result.signature_valid,
     }
     typer.echo(dumps_json(payload))
     if not result.valid:
