@@ -26,7 +26,10 @@ def _normalize_for_json(value: Any) -> Any:
     if isinstance(value, dict):
         normalized = {}
         for key, val in value.items():
-            key_str = str(key)
+            if isinstance(key, Enum):
+                key_str = key.value
+            else:
+                key_str = str(key)
             if key_str.startswith("debug_") and val is None:
                 continue
             normalized[key_str] = _normalize_for_json(val)

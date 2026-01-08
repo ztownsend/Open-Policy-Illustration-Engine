@@ -81,6 +81,7 @@ This roadmap is designed to be dropped into `docs/roadmap.md` and executed incre
   - `SCHEMA_VERSION`
   - `ROUNDING_POLICY_ID`
 - [ ] Result metadata includes these values
+- [x] Result metadata includes `currency_code`
 
 **Files**
 - `opie/core/versioning.py`
@@ -132,7 +133,7 @@ This roadmap is designed to be dropped into `docs/roadmap.md` and executed incre
 ## 1.2 Money + rounding policy module
 **Deliverables**
 - [ ] Decimal context
-- [ ] `quantize_money()`, `quantize_rate()`
+- [x] `quantize_money()` (currency-aware), `quantize_rate()`
 - [ ] Explicit rounding points guidance (document in code)
 
 **Files**

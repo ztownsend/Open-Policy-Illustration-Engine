@@ -14,7 +14,10 @@ A quick orientation to the repository layout and entry points.
 
 ## Core Engine
 - `opie/core/engine.py` - monthly loop + scenario runner (normative ordering)
+- `opie/core/currency.py` - currency codes + quantization table
 - `opie/core/money.py` - Decimal context + quantize helpers
+- `opie/core/normalization.py` - monetary input normalization
+- `opie/core/reporting.py` - reporting-currency conversions
 - `opie/core/types.py` - request/response schema + ledger fields
 - `opie/core/invariants.py` - invariant checks
 - `opie/core/versioning.py` - CALC/SCHEMA/ROUNDING versions

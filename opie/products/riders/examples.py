@@ -19,4 +19,4 @@ class FlatMonthlyChargeRider(RiderHooks):
         scenario: ScenarioAssumptions,
         rider: RiderSpec,
     ) -> Decimal:
-        return quantize_money(rider.amount)
+        return quantize_money(rider.amount, request.currency_code)

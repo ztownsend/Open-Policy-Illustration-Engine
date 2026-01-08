@@ -1,7 +1,9 @@
 from datetime import date
 from decimal import Decimal
 
+from opie import run_illustration
 from opie.assumptions.models import ScenarioSet, ULScenarioAssumptions
+from opie.core.currency import CurrencyCode
 from opie.core.engine import run_scenario
 from opie.core.types import IllustrationRequest, PolicyStatus
 from opie.products.base import ChargeResult, DeathBenefitResult, PremiumResult
@@ -159,3 +161,11 @@ def test_engine_charge_shortfall_when_insufficient_funds() -> None:
     assert row.charges_assessed == Decimal("15.00")
     assert row.charges_paid == Decimal("10.00")
     assert row.charge_shortfall == Decimal("5.00")
+
+
+def test_run_illustration_propagates_currency_code() -> None:
+    request = _ul_request(duration_months=1)
+    request = request.model_copy(update={"currency_code": CurrencyCode.EUR})
+    result = run_illustration(request)
+    assert result.currency_code == CurrencyCode.EUR
+    assert result.metadata.currency_code == CurrencyCode.EUR

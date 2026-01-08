@@ -140,7 +140,7 @@ Proposed new module:
   - `run_7702_checks(ledger, assumptions, request) -> Tax7702Report`
 
 Call site:
-- Post-process in `run_illustration()` or a new reporting step after the ledger is built.
+- Post-process in `run_illustration()` or the reporting post-processor (`opie/core/reporting.py`) after the ledger is built.
 
 No changes to `opie/core/engine.py` ordering.
 

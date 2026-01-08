@@ -29,6 +29,7 @@ htmlcov/
 .pyre/
 .pytype/
 .ruff_cache/
+.uv-cache/
 
 # IDEs/editors
 .vscode/

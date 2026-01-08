@@ -77,6 +77,7 @@ Each scenario carries its own assumptions. The output contains one ledger per sc
 ## 6) Request Model (IllustrationRequest)
 **Common fields**
 - `product_code`: `simple_ul` | `level_term` | `wl_nonpar` | `annuity_deferred` | `annuity_spia`
+- `currency_code`: `USD` | `EUR` | `BTC` (base currency for all monetary inputs/outputs)
 - `issue_age`: integer
 - `issue_gender`: `M` | `F`
 - `risk_class`: string
@@ -87,6 +88,9 @@ Each scenario carries its own assumptions. The output contains one ledger per sc
 - `scenarios`: `current` + `guaranteed` assumptions
 - `debug`: bool (emit debug fields)
 - `grace_months`: integer (UL lapse grace)
+- `reporting_currencies`: optional list of currency codes for post-processing
+- `fx_rates`: optional mapping `{currency_code: Decimal}` where `1 base_currency = fx_rates[currency]`
+- `reporting_include_debug_fields`: bool (include debug fields in reporting ledgers)
 
 **UL-specific**
 - `death_benefit_option`: `level` | `increasing`
@@ -111,6 +115,22 @@ Each scenario carries its own assumptions. The output contains one ledger per sc
 
 **Riders (optional)**
 - `riders`: list of `{rider_code, amount}`
+
+---
+
+### 6.1 Currency & Reporting Rules
+- Base currency is per-request (`currency_code`). All monetary inputs/outputs are in this currency.
+- Currency quanta:
+  - USD: `0.01`
+  - EUR: `0.01`
+  - BTC: `0.00000001`
+- Monetary inputs are normalized to the base currency quantum at validation/load time.
+- BTC inputs must have **at most 8 decimal places**; higher precision is a validation error.
+- Reporting currencies are optional and derived *after* base ledgers are finalized:
+  - `fx_rates` define `1 base_currency = fx_rates[target]`
+  - Converted ledgers quantize to the target currency quantum.
+  - `reporting_include_debug_fields` controls debug field inclusion for reporting ledgers.
+- Debug monetary fields are quantized to the base currency quantum in base ledgers.
 
 ---
 
@@ -182,8 +202,10 @@ Monthly ordering is authoritative:
 ## 10) Output Model (IllustrationResult)
 - `request_id` (deterministic hash of normalized request)
 - `product_code`
+- `currency_code`
 - `ledgers`: `{current, guaranteed}`
-- `metadata`: `calc_version`, `schema_version`, `rounding_policy_id`, optional `solve` metadata
+- `ledgers_by_currency` (optional): `{currency_code: {current, guaranteed}}`
+- `metadata`: `calc_version`, `schema_version`, `rounding_policy_id`, `currency_code`, optional `reporting_currencies`, `fx_rates`, `reporting_include_debug_fields`, optional `solve` metadata
 
 **LedgerRow (selected fields)**
 - `t`, `policy_year`, `attained_age`, `policy_status`
@@ -204,6 +226,7 @@ Monthly ordering is authoritative:
 - All calculations use `Decimal`.
 - JSON output is stable (sorted keys, Decimal string encoding).
 - Any calculation change requires a `CALC_VERSION` bump and golden updates.
+- Reporting ledgers are deterministic and do not affect base calculations.
 
 ---
 

@@ -1,5 +1,5 @@
 # Multi-Currency Spec (USD, EUR, BTC)
-Status: draft
+Status: implemented (2026-01-08)
 Owner: TBD
 
 ## 1) Summary

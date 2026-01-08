@@ -51,10 +51,11 @@ class LevelTermHooks:
     ) -> PremiumResult:
         term_scenario = _require_term_scenario(scenario)
         premium = _resolve_premium(request, term_scenario, state.t)
+        currency_code = request.currency_code
         return PremiumResult(
-            premium=quantize_money(premium),
-            premium_load=quantize_money(ZERO),
-            net_premium_to_av=quantize_money(ZERO),
+            premium=quantize_money(premium, currency_code),
+            premium_load=quantize_money(ZERO, currency_code),
+            net_premium_to_av=quantize_money(ZERO, currency_code),
         )
 
     def monthly_charges(
@@ -65,11 +66,12 @@ class LevelTermHooks:
         av_bop: Decimal,
         premium_result: PremiumResult,
     ) -> ChargeResult:
+        currency_code = request.currency_code
         return ChargeResult(
-            policy_fee=quantize_money(ZERO),
-            admin_fee=quantize_money(ZERO),
-            coi_charge=quantize_money(ZERO),
-            charges_total=quantize_money(ZERO),
+            policy_fee=quantize_money(ZERO, currency_code),
+            admin_fee=quantize_money(ZERO, currency_code),
+            coi_charge=quantize_money(ZERO, currency_code),
+            charges_total=quantize_money(ZERO, currency_code),
         )
 
     def policy_status(
@@ -104,9 +106,10 @@ class LevelTermHooks:
             death_benefit = ZERO
         else:
             death_benefit = request.face_amount
+        currency_code = request.currency_code
         return DeathBenefitResult(
-            death_benefit=quantize_money(death_benefit),
-            corridor_uplift=quantize_money(ZERO),
+            death_benefit=quantize_money(death_benefit, currency_code),
+            corridor_uplift=quantize_money(ZERO, currency_code),
         )
 
     def net_amount_at_risk(
@@ -117,8 +120,8 @@ class LevelTermHooks:
         av_bop: Decimal,
     ) -> Decimal:
         if state.t > (request.term_length_months or 0):
-            return quantize_money(ZERO)
-        return quantize_money(request.face_amount)
+            return quantize_money(ZERO, request.currency_code)
+        return quantize_money(request.face_amount, request.currency_code)
 
     def surrender_charge(
         self,
@@ -127,4 +130,4 @@ class LevelTermHooks:
         scenario: ScenarioAssumptions,
         t: int,
     ) -> Decimal:
-        return quantize_money(ZERO)
+        return quantize_money(ZERO, request.currency_code)

@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 
+from opie.core.currency import CurrencyCode
 from opie.core.errors import InvariantViolation
 from opie.core.invariants import (
     check_annuity_invariants,
@@ -227,3 +228,54 @@ def test_annuity_death_benefit_zero() -> None:
     ledger = Ledger(rows=[_annuity_row(death_benefit=Decimal("1.00"))])
     with pytest.raises(InvariantViolation):
         check_annuity_invariants(ledger)
+
+
+def test_money_quantization_invariant_rejects_extra_precision() -> None:
+    row = LedgerRow(
+        t=1,
+        policy_year=1,
+        attained_age=30,
+        policy_status=PolicyStatus.IN_FORCE,
+        premium=Decimal("1.001"),
+        cumulative_premium=Decimal("1.001"),
+        death_benefit=Decimal("0.00"),
+    )
+    ledger = Ledger(rows=[row])
+    with pytest.raises(InvariantViolation):
+        check_ul_invariants(ledger)
+
+
+def test_money_quantization_invariant_requires_btc_scale() -> None:
+    row = LedgerRow(
+        t=1,
+        policy_year=1,
+        attained_age=30,
+        policy_status=PolicyStatus.IN_FORCE,
+        premium=Decimal("1.00"),
+        cumulative_premium=Decimal("1.00"),
+        death_benefit=Decimal("0.00"),
+    )
+    ledger = Ledger(rows=[row])
+    with pytest.raises(InvariantViolation):
+        check_ul_invariants(ledger, currency_code=CurrencyCode.BTC)
+
+
+def test_money_quantization_invariant_accepts_btc_scale() -> None:
+    row = LedgerRow(
+        t=1,
+        policy_year=1,
+        attained_age=30,
+        policy_status=PolicyStatus.IN_FORCE,
+        premium=Decimal("0.00000001"),
+        cumulative_premium=Decimal("0.00000001"),
+        death_benefit=Decimal("0.00000000"),
+    )
+    ledger = Ledger(rows=[row])
+    check_ul_invariants(ledger, currency_code=CurrencyCode.BTC)
+
+
+def test_money_quantization_invariant_rejects_unquantized_debug_fields() -> None:
+    row = _ul_row(debug_interest_credited_unrounded=Decimal("1.001"))
+    ledger = Ledger(rows=[row])
+    with pytest.raises(InvariantViolation):
+        check_ul_invariants(ledger)

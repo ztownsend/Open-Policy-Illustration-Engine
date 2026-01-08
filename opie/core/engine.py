@@ -10,8 +10,16 @@ from opie.assumptions.models import ScenarioAssumptions
 from opie.core.errors import EngineError
 from opie.core.ledger import dumps_json
 from opie.core.money import quantize_money, quantize_rate
+from opie.core.reporting import build_reporting_ledgers
 from opie.core.time import attained_age_for_month, policy_year_for_month
-from opie.core.types import IllustrationRequest, IllustrationResult, Ledger, LedgerRow, PolicyStatus
+from opie.core.types import (
+    IllustrationRequest,
+    IllustrationResult,
+    Ledger,
+    LedgerRow,
+    PolicyStatus,
+    build_metadata,
+)
 from opie.products.base import ProductHooks
 from opie.products.riders.registry import get_rider_hook
 
@@ -64,6 +72,7 @@ def run_scenario(
     rows: list[LedgerRow] = []
     av_eop_prev = ZERO
     cumulative_premium = ZERO
+    currency_code = request.currency_code
     grace_counter = 0
     loan_balance_prev = ZERO
     loan_rate_annual = request.loan_interest_rate_annual or ZERO
@@ -164,49 +173,55 @@ def run_scenario(
             death_benefit = db_result.death_benefit
             corridor_uplift = db_result.corridor_uplift
 
-        av_eop_quantized = quantize_money(av_eop)
+        av_eop_quantized = quantize_money(av_eop, currency_code)
 
         row = LedgerRow(
             t=t,
             policy_year=policy_year,
             attained_age=attained_age,
             policy_status=policy_status,
-            premium=quantize_money(premium_result.premium),
-            cumulative_premium=quantize_money(cumulative_premium),
-            death_benefit=quantize_money(death_benefit),
-            account_value_bop=quantize_money(av_bop),
-            premium_load=quantize_money(premium_result.premium_load),
-            net_premium_to_av=quantize_money(premium_result.net_premium_to_av),
-            policy_fee=quantize_money(charges.policy_fee),
-            coi_charge=quantize_money(charges.coi_charge),
-            admin_fee=quantize_money(charges.admin_fee),
-            charges_total=quantize_money(charges_assessed),
-            charges_assessed=quantize_money(charges_assessed),
-            charges_paid=quantize_money(charges_paid),
-            charge_shortfall=quantize_money(charge_shortfall),
-            rider_charges=quantize_money(rider_charges),
-            net_amount_at_risk=quantize_money(net_amount_at_risk),
-            account_value_mid_raw=quantize_money(av_mid_raw),
-            interest_credited=quantize_money(interest_credited),
+            premium=quantize_money(premium_result.premium, currency_code),
+            cumulative_premium=quantize_money(cumulative_premium, currency_code),
+            death_benefit=quantize_money(death_benefit, currency_code),
+            account_value_bop=quantize_money(av_bop, currency_code),
+            premium_load=quantize_money(premium_result.premium_load, currency_code),
+            net_premium_to_av=quantize_money(premium_result.net_premium_to_av, currency_code),
+            policy_fee=quantize_money(charges.policy_fee, currency_code),
+            coi_charge=quantize_money(charges.coi_charge, currency_code),
+            admin_fee=quantize_money(charges.admin_fee, currency_code),
+            charges_total=quantize_money(charges_assessed, currency_code),
+            charges_assessed=quantize_money(charges_assessed, currency_code),
+            charges_paid=quantize_money(charges_paid, currency_code),
+            charge_shortfall=quantize_money(charge_shortfall, currency_code),
+            rider_charges=quantize_money(rider_charges, currency_code),
+            net_amount_at_risk=quantize_money(net_amount_at_risk, currency_code),
+            account_value_mid_raw=quantize_money(av_mid_raw, currency_code),
+            interest_credited=quantize_money(interest_credited, currency_code),
             account_value_eop=av_eop_quantized,
-            surrender_charge=quantize_money(surrender_charge),
-            cash_surrender_value=quantize_money(cash_surrender_value),
-            corridor_uplift=quantize_money(corridor_uplift),
-            withdrawal=quantize_money(withdrawal),
-            loan_draw=quantize_money(loan_draw),
-            loan_repayment=quantize_money(loan_repayment),
-            loan_interest=quantize_money(loan_interest),
-            loan_balance=quantize_money(loan_balance),
+            surrender_charge=quantize_money(surrender_charge, currency_code),
+            cash_surrender_value=quantize_money(cash_surrender_value, currency_code),
+            corridor_uplift=quantize_money(corridor_uplift, currency_code),
+            withdrawal=quantize_money(withdrawal, currency_code),
+            loan_draw=quantize_money(loan_draw, currency_code),
+            loan_repayment=quantize_money(loan_repayment, currency_code),
+            loan_interest=quantize_money(loan_interest, currency_code),
+            loan_balance=quantize_money(loan_balance, currency_code),
             term_month=term_month,
             coverage_in_force=coverage_in_force,
-            debug_av_mid_raw_unrounded=av_mid_raw if request.debug else None,
-            debug_interest_credited_unrounded=interest_credited if request.debug else None,
-            debug_account_value_eop_unrounded=av_eop if request.debug else None,
+            debug_av_mid_raw_unrounded=(
+                quantize_money(av_mid_raw, currency_code) if request.debug else None
+            ),
+            debug_interest_credited_unrounded=(
+                quantize_money(interest_credited, currency_code) if request.debug else None
+            ),
+            debug_account_value_eop_unrounded=(
+                quantize_money(av_eop, currency_code) if request.debug else None
+            ),
         )
         rows.append(row)
 
         av_eop_prev = av_eop_quantized
-        loan_balance_prev = quantize_money(loan_balance)
+        loan_balance_prev = quantize_money(loan_balance, currency_code)
         if lapsed:
             break
 
@@ -222,8 +237,12 @@ def run_illustration(request: IllustrationRequest, hooks: ProductHooks) -> Illus
     if not ledgers:
         raise EngineError("No scenarios executed", product_code=request.product_code)
 
+    ledgers_by_currency = build_reporting_ledgers(request, ledgers)
     return IllustrationResult(
         request_id=_request_id(request),
         product_code=request.product_code,
+        currency_code=request.currency_code,
         ledgers=ledgers,
+        ledgers_by_currency=ledgers_by_currency,
+        metadata=build_metadata(request),
     )

@@ -4,6 +4,8 @@ Open Policy Illustration Engine (OPIE) is a deterministic, versioned life-insura
 
 ## Highlights
 - Deterministic math with `Decimal` only (no floats)
+- Base currency support (USD/EUR/BTC) with currency-specific quantization
+- Optional reporting-currency ledgers via FX rates (post-processing only)
 - Products: `simple_ul`, `level_term`, `wl_nonpar`, `annuity_deferred`, `annuity_spia`
 - Scenarios: `current` and `guaranteed`
 - Premium solve (keep-in-force or target AV)
@@ -20,7 +22,8 @@ Open Policy Illustration Engine (OPIE) is a deterministic, versioned life-insura
    - `UV_NO_EDITABLE=1 uv sync`
    - or `make sync`
 3) Run tests
-   - `uv run pytest`
+   - `make test` (preferred)
+   - or `UV_NO_SYNC=1 uv run pytest`
 4) Try the CLI
    - `uv run opie --help`
    - `uv run opie illustrate --in examples/ul_simple_request.json --out /tmp/out.json`
@@ -28,6 +31,9 @@ Open Policy Illustration Engine (OPIE) is a deterministic, versioned life-insura
 ## CLI
 - Illustrate:
   - `uv run opie illustrate --in examples/ul_simple_request.json --out /tmp/out.json`
+- Illustrate with currency + reporting currencies:
+  - `uv run opie illustrate --in examples/term_request.json --out /tmp/out.json --currency EUR`
+  - `uv run opie illustrate --in examples/term_request.json --out /tmp/out.json --reporting-currencies EUR --fx-rate EUR=0.91`
 - Diff two ledgers:
   - `uv run opie diff --a tests/golden/ul_simple_current.json --b tests/golden/ul_simple_guaranteed.json`
 - Compare with max-diff stats:
@@ -88,7 +94,7 @@ Goldens are the output contract.
 - `make benchmark`
 
 ## Determinism & Versioning
-- Outputs include `calc_version`, `schema_version`, and `rounding_policy_id`.
+- Outputs include `calc_version`, `schema_version`, `rounding_policy_id`, and `currency_code`.
 - JSON serialization is stable (sorted keys, Decimal string encoding).
 
 ## Docs

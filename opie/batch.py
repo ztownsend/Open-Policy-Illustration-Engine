@@ -8,6 +8,7 @@ from typing import IO, Any
 
 from opie import run_illustration
 from opie.assumptions.loaders import load_scenario_set
+from opie.core.currency import CurrencyCode
 from opie.core.ledger import dumps_json
 from opie.core.types import IllustrationRequest
 
@@ -25,21 +26,24 @@ class BatchRunner:
         self._scenario_cache: dict[tuple[str, str], Any] = {}
         self.stats = BatchStats()
 
-    def _cache_key(self, product_code: str, scenarios: dict[str, Any]) -> tuple[str, str]:
+    def _cache_key(
+        self, product_code: str, scenarios: dict[str, Any], currency_code: CurrencyCode
+    ) -> tuple[str, str]:
         scenarios_key = json.dumps(
             scenarios,
             sort_keys=True,
             separators=(",", ":"),
             ensure_ascii=True,
         )
-        return product_code, scenarios_key
+        return product_code, f"{currency_code.value}:{scenarios_key}"
 
     def _build_request(self, payload: dict[str, Any]) -> IllustrationRequest:
         product_code = payload.get("product_code")
         if not isinstance(product_code, str):
             raise ValueError("product_code must be provided")
+        currency_code = CurrencyCode(payload.get("currency_code", CurrencyCode.USD))
         scenarios_payload = payload.get("scenarios", {})
-        cache_key = self._cache_key(product_code, scenarios_payload)
+        cache_key = self._cache_key(product_code, scenarios_payload, currency_code)
         scenario_set = self._scenario_cache.get(cache_key)
         if scenario_set is None:
             scenario_set = load_scenario_set(
@@ -47,6 +51,7 @@ class BatchRunner:
                 scenarios_payload,
                 schedule_mode=self.schedule_mode,
                 duration_months=payload.get("duration_months"),
+                currency_code=currency_code,
             )
             self._scenario_cache[cache_key] = scenario_set
             self.stats.cache_misses += 1

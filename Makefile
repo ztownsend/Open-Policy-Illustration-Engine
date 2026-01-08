@@ -1,8 +1,12 @@
 UV ?= uv
 PYTHON ?= python
 UV_NO_EDITABLE ?= 1
+UV_NO_SYNC ?= 1
+UV_CACHE_DIR ?= .uv-cache
 
 export UV_NO_EDITABLE
+export UV_NO_SYNC
+export UV_CACHE_DIR
 
 .PHONY: help sync test lint format format-check conformance ui pdf batch benchmark
 

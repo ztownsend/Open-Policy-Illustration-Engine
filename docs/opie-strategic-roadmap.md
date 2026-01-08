@@ -12,7 +12,7 @@ OPIE becomes the reference implementation for life insurance illustrations—the
 ---
 
 ## Status (as of 2026-01-08)
-- **Completed**: Phase 1 MVP engine; Phase 3 UL completeness; baseline batch/pack/bundle tooling; conformance runner + comparison tools; UI Explorer; minimal PDF renderer.
+- **Completed**: Phase 1 MVP engine; Phase 3 UL completeness; baseline batch/pack/bundle tooling; conformance runner + comparison tools; UI Explorer; minimal PDF renderer; multi-currency base + reporting (USD/EUR/BTC).
 - **Partially complete**: Phase 0 foundations (mypy/type-check missing), Phase 2 debugging (scenario-to-scenario diff missing), Phase 4 product breadth (WL + annuities simplified; SPIA payout/annuitization pending), Phase 6 riders (framework only), Phase 7 compliance (no NAIC/AG49), Phase 8 enterprise features (no parallelism/governance), Phase 9 platform & ecosystem (marketplace/certification pending).
 - **Not started**: Phase 5 indexed products; Phase 10 industry standard adoption.
 ---
@@ -424,7 +424,7 @@ AG49 (and AG49-A, AG49-B) compliance is Phase 7. This phase builds the mechanics
 - [ ] Canada (OSFI requirements)
 - [ ] Australia (APRA requirements)
 - [ ] EU (IDD disclosure requirements)
-- [ ] Localization framework (currency, language, date formats)
+- [ ] Localization framework (currency, language, date formats; core currency support complete)
 
 ### Adjacent Domains
 - [ ] Health insurance illustrations

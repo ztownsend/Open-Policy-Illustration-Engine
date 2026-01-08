@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from opie.assumptions.models import ScenarioSet, ULScenarioAssumptions
+from opie.core.currency import currency_quantum
 from opie.core.engine import run_illustration
 from opie.core.ledger import dumps_json
 from opie.core.types import IllustrationRequest
@@ -36,6 +37,14 @@ def test_debug_fields_included_when_enabled() -> None:
     result = run_illustration(request, SimpleULHooks())
     payload = dumps_json(result)
     assert "debug_av_mid_raw_unrounded" in payload
+    row = result.ledgers["current"].rows[0]
+    expected_exponent = currency_quantum(result.currency_code).as_tuple().exponent
+    assert row.debug_av_mid_raw_unrounded is not None
+    assert row.debug_interest_credited_unrounded is not None
+    assert row.debug_account_value_eop_unrounded is not None
+    assert row.debug_av_mid_raw_unrounded.as_tuple().exponent == expected_exponent
+    assert row.debug_interest_credited_unrounded.as_tuple().exponent == expected_exponent
+    assert row.debug_account_value_eop_unrounded.as_tuple().exponent == expected_exponent
 
 
 def test_debug_fields_omitted_when_disabled() -> None:

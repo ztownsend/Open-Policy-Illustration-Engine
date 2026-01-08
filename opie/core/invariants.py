@@ -4,10 +4,43 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from opie.core.currency import CurrencyCode
 from opie.core.errors import EngineError, InvariantViolation
+from opie.core.money import quantize_money
 from opie.core.types import Ledger, PolicyStatus
 
 ZERO = Decimal("0")
+MONEY_FIELDS = (
+    "premium",
+    "cumulative_premium",
+    "death_benefit",
+    "account_value_bop",
+    "premium_load",
+    "net_premium_to_av",
+    "policy_fee",
+    "coi_charge",
+    "admin_fee",
+    "charges_total",
+    "charges_assessed",
+    "charges_paid",
+    "charge_shortfall",
+    "rider_charges",
+    "net_amount_at_risk",
+    "account_value_mid_raw",
+    "interest_credited",
+    "account_value_eop",
+    "surrender_charge",
+    "cash_surrender_value",
+    "corridor_uplift",
+    "withdrawal",
+    "loan_draw",
+    "loan_repayment",
+    "loan_interest",
+    "loan_balance",
+    "debug_av_mid_raw_unrounded",
+    "debug_interest_credited_unrounded",
+    "debug_account_value_eop_unrounded",
+)
 
 
 def _ensure(condition: bool, message: str, *, t: int | None = None) -> None:
@@ -88,7 +121,23 @@ def _check_withdrawal_loan_fields(row, *, require_zero: bool) -> None:
             _ensure_non_negative(value, label, t=row.t)
 
 
-def _check_common_rows(ledger: Ledger) -> None:
+def _check_money_quantization(ledger: Ledger, *, currency_code: CurrencyCode) -> None:
+    for row in ledger.rows:
+        for field in MONEY_FIELDS:
+            value = getattr(row, field, None)
+            if value is None:
+                continue
+            expected = quantize_money(value, currency_code)
+            _ensure(value == expected, f"{field} not quantized", t=row.t)
+            _ensure(
+                value.as_tuple().exponent == expected.as_tuple().exponent,
+                f"{field} not quantized to currency precision",
+                t=row.t,
+            )
+
+
+def _check_common_rows(ledger: Ledger, *, currency_code: CurrencyCode) -> None:
+    _check_money_quantization(ledger, currency_code=currency_code)
     prev_cumulative: Decimal | None = None
     for row in ledger.rows:
         _check_premium_invariants(row)
@@ -105,8 +154,10 @@ def _check_common_rows(ledger: Ledger) -> None:
         prev_cumulative = row.cumulative_premium
 
 
-def check_ul_invariants(ledger: Ledger) -> None:
-    _check_common_rows(ledger)
+def check_ul_invariants(
+    ledger: Ledger, *, currency_code: CurrencyCode = CurrencyCode.USD
+) -> None:
+    _check_common_rows(ledger, currency_code=currency_code)
     for row in ledger.rows:
         _check_cash_value_invariants(row)
         _check_withdrawal_loan_fields(row, require_zero=False)
@@ -129,40 +180,51 @@ def check_ul_invariants(ledger: Ledger) -> None:
             _ensure(row.death_benefit == ZERO, "DB not zero on lapse", t=row.t)
 
 
-def check_term_invariants(ledger: Ledger) -> None:
-    _check_common_rows(ledger)
+def check_term_invariants(
+    ledger: Ledger, *, currency_code: CurrencyCode = CurrencyCode.USD
+) -> None:
+    _check_common_rows(ledger, currency_code=currency_code)
     for row in ledger.rows:
         _check_withdrawal_loan_fields(row, require_zero=True)
         if row.policy_status == PolicyStatus.EXPIRED:
             _ensure(row.death_benefit == ZERO, "DB not zero on expired term", t=row.t)
 
 
-def check_wl_invariants(ledger: Ledger) -> None:
-    _check_common_rows(ledger)
+def check_wl_invariants(
+    ledger: Ledger, *, currency_code: CurrencyCode = CurrencyCode.USD
+) -> None:
+    _check_common_rows(ledger, currency_code=currency_code)
     for row in ledger.rows:
         _check_cash_value_invariants(row)
         _check_withdrawal_loan_fields(row, require_zero=True)
 
 
-def check_annuity_invariants(ledger: Ledger) -> None:
-    _check_common_rows(ledger)
+def check_annuity_invariants(
+    ledger: Ledger, *, currency_code: CurrencyCode = CurrencyCode.USD
+) -> None:
+    _check_common_rows(ledger, currency_code=currency_code)
     for row in ledger.rows:
         _check_cash_value_invariants(row)
         _check_withdrawal_loan_fields(row, require_zero=True)
         _ensure(row.death_benefit == ZERO, "death_benefit must be zero", t=row.t)
 
 
-def check_invariants(product_code: str, ledger: Ledger) -> None:
+def check_invariants(
+    product_code: str,
+    ledger: Ledger,
+    *,
+    currency_code: CurrencyCode = CurrencyCode.USD,
+) -> None:
     if product_code == "simple_ul":
-        check_ul_invariants(ledger)
+        check_ul_invariants(ledger, currency_code=currency_code)
         return
     if product_code == "level_term":
-        check_term_invariants(ledger)
+        check_term_invariants(ledger, currency_code=currency_code)
         return
     if product_code == "wl_nonpar":
-        check_wl_invariants(ledger)
+        check_wl_invariants(ledger, currency_code=currency_code)
         return
     if product_code in {"annuity_deferred", "annuity_spia"}:
-        check_annuity_invariants(ledger)
+        check_annuity_invariants(ledger, currency_code=currency_code)
         return
     raise EngineError("Unknown product_code for invariants", product_code=product_code)

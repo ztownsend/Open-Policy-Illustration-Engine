@@ -16,6 +16,9 @@ from opie.assumptions.models import (
     ULScenarioAssumptions,
     WLScenarioAssumptions,
 )
+from opie.core.currency import CurrencyCode
+from opie.core.money import quantize_money_input
+from opie.core.normalization import normalize_scenario_money, quantize_money_mapping
 from opie.core.validation import DecimalInput
 from .versioning import CALC_VERSION, ROUNDING_POLICY_ID, SCHEMA_VERSION
 
@@ -102,6 +105,10 @@ class IllustrationRequest(StrictBaseModel):
     product_code: Literal[
         "simple_ul", "level_term", "wl_nonpar", "annuity_deferred", "annuity_spia"
     ]
+    currency_code: CurrencyCode = CurrencyCode.USD
+    reporting_currencies: list[CurrencyCode] | None = None
+    fx_rates: dict[CurrencyCode, DecimalInput] | None = None
+    reporting_include_debug_fields: bool = False
     issue_age: int
     issue_gender: IssueGender
     risk_class: str
@@ -195,6 +202,121 @@ class IllustrationRequest(StrictBaseModel):
 
         raise ValueError("Unsupported product_code")
 
+    @model_validator(mode="after")
+    def _validate_reporting_currencies(self) -> "IllustrationRequest":
+        if not self.reporting_currencies:
+            return self
+
+        if self.fx_rates is None:
+            raise ValueError("fx_rates is required when reporting_currencies is provided")
+
+        unique_currencies = list(dict.fromkeys(self.reporting_currencies))
+        if len(unique_currencies) != len(self.reporting_currencies):
+            self.reporting_currencies = unique_currencies
+
+        missing = [
+            currency
+            for currency in self.reporting_currencies
+            if currency not in self.fx_rates
+        ]
+        if missing:
+            missing_codes = ", ".join([code.value for code in missing])
+            raise ValueError(f"fx_rates missing for reporting currencies: {missing_codes}")
+        return self
+
+    @model_validator(mode="after")
+    def _normalize_monetary_inputs(self) -> "IllustrationRequest":
+        currency_code = self.currency_code
+
+        self.face_amount = quantize_money_input(
+            self.face_amount, currency_code, label="face_amount"
+        )
+
+        if self.premium_schedule:
+            normalized_schedule = []
+            for entry in self.premium_schedule:
+                if entry.month is not None:
+                    label = f"premium_schedule[{entry.month}].amount"
+                elif entry.start_month is not None and entry.end_month is not None:
+                    label = f"premium_schedule[{entry.start_month}-{entry.end_month}].amount"
+                else:
+                    label = "premium_schedule.amount"
+                normalized_schedule.append(
+                    entry.model_copy(
+                        update={
+                            "amount": quantize_money_input(
+                                entry.amount, currency_code, label=label
+                            )
+                        }
+                    )
+                )
+            self.premium_schedule = normalized_schedule
+
+        if self.withdrawal_schedule:
+            self.withdrawal_schedule = quantize_money_mapping(
+                self.withdrawal_schedule,
+                currency_code,
+                label="withdrawal_schedule",
+            )
+        if self.loan_draw_schedule:
+            self.loan_draw_schedule = quantize_money_mapping(
+                self.loan_draw_schedule,
+                currency_code,
+                label="loan_draw_schedule",
+            )
+        if self.loan_repayment_schedule:
+            self.loan_repayment_schedule = quantize_money_mapping(
+                self.loan_repayment_schedule,
+                currency_code,
+                label="loan_repayment_schedule",
+            )
+
+        if self.minimum_account_value_floor is not None:
+            self.minimum_account_value_floor = quantize_money_input(
+                self.minimum_account_value_floor,
+                currency_code,
+                label="minimum_account_value_floor",
+            )
+
+        if self.riders:
+            self.riders = [
+                rider.model_copy(
+                    update={
+                        "amount": quantize_money_input(
+                            rider.amount,
+                            currency_code,
+                            label=f"riders[{rider.rider_code}].amount",
+                        )
+                    }
+                )
+                for rider in self.riders
+            ]
+
+        if self.solve is not None:
+            solve_updates = {
+                "min_premium": quantize_money_input(
+                    self.solve.min_premium, currency_code, label="solve.min_premium"
+                ),
+                "max_premium": quantize_money_input(
+                    self.solve.max_premium, currency_code, label="solve.max_premium"
+                ),
+                "tolerance": quantize_money_input(
+                    self.solve.tolerance, currency_code, label="solve.tolerance"
+                ),
+            }
+            if self.solve.target_av is not None:
+                solve_updates["target_av"] = quantize_money_input(
+                    self.solve.target_av, currency_code, label="solve.target_av"
+                )
+            self.solve = self.solve.model_copy(update=solve_updates)
+
+        self.scenarios = ScenarioSet(
+            current=normalize_scenario_money(self.scenarios.current, currency_code),
+            guaranteed=normalize_scenario_money(self.scenarios.guaranteed, currency_code),
+        )
+
+        return self
+
 
 class SolveMetadata(StrictBaseModel):
     mode: str
@@ -210,14 +332,37 @@ class IllustrationMetadata(StrictBaseModel):
     calc_version: str
     schema_version: str
     rounding_policy_id: str
+    currency_code: CurrencyCode
+    reporting_currencies: list[CurrencyCode] | None = None
+    fx_rates: dict[CurrencyCode, Decimal] | None = None
+    reporting_include_debug_fields: bool | None = None
     solve: SolveMetadata | None = None
 
 
-def build_metadata() -> IllustrationMetadata:
+def build_metadata(
+    request: "IllustrationRequest | None" = None,
+    *,
+    solve: SolveMetadata | None = None,
+) -> IllustrationMetadata:
+    if request is None:
+        return IllustrationMetadata(
+            calc_version=CALC_VERSION,
+            schema_version=SCHEMA_VERSION,
+            rounding_policy_id=ROUNDING_POLICY_ID,
+            currency_code=CurrencyCode.USD,
+            solve=solve,
+        )
     return IllustrationMetadata(
         calc_version=CALC_VERSION,
         schema_version=SCHEMA_VERSION,
         rounding_policy_id=ROUNDING_POLICY_ID,
+        currency_code=request.currency_code,
+        reporting_currencies=request.reporting_currencies,
+        fx_rates=request.fx_rates,
+        reporting_include_debug_fields=(
+            request.reporting_include_debug_fields if request.reporting_currencies else None
+        ),
+        solve=solve,
     )
 
 
@@ -271,5 +416,7 @@ class Ledger(StrictBaseModel):
 class IllustrationResult(StrictBaseModel):
     request_id: str
     product_code: str
+    currency_code: CurrencyCode
     ledgers: dict[str, Ledger]
+    ledgers_by_currency: dict[CurrencyCode, dict[str, Ledger]] | None = None
     metadata: IllustrationMetadata = Field(default_factory=build_metadata)

@@ -32,6 +32,14 @@ def test_ul_simple_golden() -> None:
     _assert_golden(Path("examples/ul_simple_request.json"), "ul_simple")
 
 
+def test_ul_simple_eur_golden() -> None:
+    _assert_golden(Path("examples/ul_simple_eur_request.json"), "ul_simple_eur")
+
+
+def test_ul_simple_btc_golden() -> None:
+    _assert_golden(Path("examples/ul_simple_btc_request.json"), "ul_simple_btc")
+
+
 def test_ul_simple_effective_golden() -> None:
     _assert_golden(Path("examples/ul_simple_effective_request.json"), "ul_simple_effective")
 

@@ -7,15 +7,15 @@ from decimal import Decimal
 from opie.core.engine import _request_id, run_scenario
 from opie.core.errors import EngineError
 from opie.core.money import quantize_money
-from opie.core.versioning import CALC_VERSION, ROUNDING_POLICY_ID, SCHEMA_VERSION
+from opie.core.reporting import build_reporting_ledgers
 from opie.core.types import (
-    IllustrationMetadata,
     IllustrationRequest,
     IllustrationResult,
     Ledger,
     PolicyStatus,
     PremiumScheduleEntry,
     SolveMetadata,
+    build_metadata,
 )
 from opie.products.base import ProductHooks
 
@@ -30,7 +30,7 @@ def _premium_schedule_for_request(
         PremiumScheduleEntry(
             start_month=1,
             end_month=request.duration_months,
-            amount=quantize_money(premium),
+            amount=quantize_money(premium, request.currency_code),
         )
     ]
 
@@ -97,7 +97,7 @@ def _solve_for_scenario(
             else:
                 low = mid
 
-    return quantize_money(high)
+    return quantize_money(high, request.currency_code)
 
 
 def solve_illustration(request: IllustrationRequest, hooks: ProductHooks) -> IllustrationResult:
@@ -135,16 +135,14 @@ def solve_illustration(request: IllustrationRequest, hooks: ProductHooks) -> Ill
         strategy=strategy,
         solved_premiums=solved_premiums,
     )
-    metadata = IllustrationMetadata(
-        calc_version=CALC_VERSION,
-        schema_version=SCHEMA_VERSION,
-        rounding_policy_id=ROUNDING_POLICY_ID,
-        solve=solve_meta,
-    )
+    metadata = build_metadata(request, solve=solve_meta)
 
+    ledgers_by_currency = build_reporting_ledgers(request, ledgers)
     return IllustrationResult(
         request_id=_request_id(request),
         product_code=request.product_code,
+        currency_code=request.currency_code,
         ledgers=ledgers,
+        ledgers_by_currency=ledgers_by_currency,
         metadata=metadata,
     )

@@ -22,3 +22,18 @@ def test_batch_runner_ndjson() -> None:
     assert stats.processed == 2
     assert stats.cache_misses == 1
     assert stats.cache_hits == 1
+
+
+def test_batch_cache_respects_currency() -> None:
+    payload = json.loads(Path("examples/term_request.json").read_text())
+    payload_eur = dict(payload)
+    payload_eur["currency_code"] = "EUR"
+
+    ndjson = "\n".join([json.dumps(payload), json.dumps(payload_eur), ""])
+    runner = BatchRunner()
+    output = io.StringIO()
+    stats = runner.run(io.StringIO(ndjson), output)
+
+    assert stats.processed == 2
+    assert stats.cache_misses == 2
+    assert stats.cache_hits == 0

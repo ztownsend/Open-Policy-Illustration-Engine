@@ -44,10 +44,11 @@ class WLNonParHooks:
                 scenario=getattr(state, "scenario_name", None),
                 t=state.t,
             )
+        currency_code = request.currency_code
         return PremiumResult(
-            premium=quantize_money(net_premium_to_av),
-            premium_load=quantize_money(ZERO),
-            net_premium_to_av=quantize_money(net_premium_to_av),
+            premium=quantize_money(net_premium_to_av, currency_code),
+            premium_load=quantize_money(ZERO, currency_code),
+            net_premium_to_av=quantize_money(net_premium_to_av, currency_code),
         )
 
     def monthly_charges(
@@ -58,11 +59,12 @@ class WLNonParHooks:
         av_bop: Decimal,
         premium_result: PremiumResult,
     ) -> ChargeResult:
+        currency_code = request.currency_code
         return ChargeResult(
-            policy_fee=quantize_money(ZERO),
-            admin_fee=quantize_money(ZERO),
-            coi_charge=quantize_money(ZERO),
-            charges_total=quantize_money(ZERO),
+            policy_fee=quantize_money(ZERO, currency_code),
+            admin_fee=quantize_money(ZERO, currency_code),
+            coi_charge=quantize_money(ZERO, currency_code),
+            charges_total=quantize_money(ZERO, currency_code),
         )
 
     def policy_status(
@@ -89,9 +91,10 @@ class WLNonParHooks:
         av_bop: Decimal,
         av_eop: Decimal,
     ) -> DeathBenefitResult:
+        currency_code = request.currency_code
         return DeathBenefitResult(
-            death_benefit=quantize_money(request.face_amount),
-            corridor_uplift=quantize_money(ZERO),
+            death_benefit=quantize_money(request.face_amount, currency_code),
+            corridor_uplift=quantize_money(ZERO, currency_code),
         )
 
     def net_amount_at_risk(
@@ -104,7 +107,7 @@ class WLNonParHooks:
         nar = request.face_amount - av_bop
         if nar < ZERO:
             nar = ZERO
-        return quantize_money(nar)
+        return quantize_money(nar, request.currency_code)
 
     def surrender_charge(
         self,
@@ -126,4 +129,4 @@ class WLNonParHooks:
         charge = cash_value - surrender_value
         if charge < ZERO:
             charge = ZERO
-        return quantize_money(charge)
+        return quantize_money(charge, request.currency_code)

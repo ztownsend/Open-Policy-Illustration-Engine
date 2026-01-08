@@ -125,11 +125,12 @@ You must add or update tests in the same diff:
 
 ### 4.4 Run commands locally
 Run (at minimum):
-- `uv run pytest`
+- `make test` (preferred)
+- or `UV_NO_SYNC=1 uv run pytest`
 
 If configured:
-- `uv run ruff check .`
-- `uv run ruff format .`
+- `make lint`
+- `make format`
 
 ### 4.5 If outputs changed
 Decide whether the change is:

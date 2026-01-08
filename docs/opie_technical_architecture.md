@@ -14,6 +14,7 @@ This document is written to be consumable by:
   - runs **two scenarios** (`current`, `guaranteed`)
   - enforces **ordering**, **rounding**, and **lapse semantics**
   - produces a **ledger** (rows)
+- Base currency is declared per request; optional reporting-currency ledgers are post-processed.
 - **Products** are plugins via a small hook interface (charges, NAR, surrender schedule, DB).
 - **Assumptions** load from JSON/CSV into strongly-typed models.
 - Tests use **golden ledgers** + **invariants** to prevent “penny drift.”
@@ -66,14 +67,16 @@ The engine is stable; products implement hooks with minimal surface area.
 ```
 IllustrationRequest
    │
-   ├─ validate + normalize (Pydantic + Decimal normalization)
+   ├─ validate + normalize (Pydantic + currency-specific Decimal normalization)
    │
    ├─ for scenario in {current, guaranteed}:
    │     ├─ build ScenarioContext (assumptions + tables)
    │     ├─ run Engine(product_hooks, context, request)
    │     └─ produce Ledger(rows)
    │
-   └─ IllustrationResult(ledgers + metadata)
+   ├─ optional reporting conversion (post-process base ledgers)
+   │
+   └─ IllustrationResult(ledgers + metadata [+ optional ledgers_by_currency])
 ```
 
 ---
@@ -85,7 +88,10 @@ opie/
   __init__.py                 # exports run_illustration()
   core/
     types.py                  # request/response models, enums, shared dataclasses
+    currency.py               # currency codes + quanta
     money.py                  # Decimal context, rounding helpers, quantize policy
+    normalization.py          # input normalization for monetary fields
+    reporting.py              # reporting-currency conversion helpers
     time.py                   # month indexing, policy year, attained age utilities
     engine.py                 # projection loop + scenario runner
     ledger.py                 # ledger row building, serialization helpers
@@ -385,6 +391,10 @@ Every `IllustrationResult` includes:
 - `calc_version`
 - `rounding_policy_id`
 - `schema_version`
+- `currency_code`
+- optional `reporting_currencies`
+- optional `fx_rates`
+- optional `reporting_include_debug_fields`
 
 Golden files should include these fields so changes are explicit.
 

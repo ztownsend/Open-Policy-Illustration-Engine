@@ -1,0 +1,33 @@
+{
+  "product_code": "simple_ul",
+  "currency_code": "BTC",
+  "issue_age": 35,
+  "issue_gender": "M",
+  "risk_class": "NT",
+  "face_amount": "100000",
+  "issue_date": "2025-01-01",
+  "duration_months": 24,
+  "premium_schedule": [
+    {"start_month": 1, "end_month": 24, "amount": "200"}
+  ],
+  "scenarios": {
+    "current": {
+      "crediting_rate_annual": "0.04",
+      "premium_load_pct": "0.06",
+      "monthly_policy_fee": "5",
+      "monthly_per_thousand_admin_fee": "0.10",
+      "coi_table": {"35": "0.20", "36": "0.22"},
+      "surrender_charge_schedule": {"1": "1000", "13": "500"}
+    },
+    "guaranteed": {
+      "crediting_rate_annual": "0.03",
+      "premium_load_pct": "0.06",
+      "monthly_policy_fee": "5",
+      "monthly_per_thousand_admin_fee": "0.10",
+      "coi_table": {"35": "0.25", "36": "0.27"},
+      "surrender_charge_schedule": {"1": "1200", "13": "600"}
+    }
+  },
+  "death_benefit_option": "level",
+  "minimum_account_value_floor": "0"
+}

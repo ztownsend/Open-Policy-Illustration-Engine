@@ -23,6 +23,8 @@ jobs:
         python: ["3.14"]
     env:
       UV_NO_EDITABLE: "1"
+      UV_NO_SYNC: "1"
+      UV_CACHE_DIR: ".uv-cache"
       UV_PYTHON: ${{ matrix.python }}
       PYTHONHASHSEED: "0"
     steps:
@@ -75,6 +77,8 @@ jobs:
     needs: test
     env:
       UV_NO_EDITABLE: "1"
+      UV_NO_SYNC: "1"
+      UV_CACHE_DIR: ".uv-cache"
       UV_PYTHON: "3.14"
       PYTHONHASHSEED: "0"
     steps:
