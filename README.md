@@ -49,6 +49,32 @@ Open Policy Illustration Engine (OPIE) is a deterministic, versioned life-insura
   - `uv run opie bundle create --request examples/term_request.json --out /tmp/opie_bundle.zip`
   - `uv run opie bundle verify --bundle /tmp/opie_bundle.zip`
 
+## Multi-Currency
+OPIE runs each illustration in a single **base currency** and can optionally emit
+**reporting-currency** ledgers as a post-processing step (no effect on engine math).
+
+**Base currency**
+- Set `currency_code` per request (default `USD`). All monetary inputs/outputs are in this currency.
+- Supported currencies + quanta: `USD` = `0.01`, `EUR` = `0.01`, `BTC` = `0.00000001`.
+- Inputs are normalized to the base currency quantum at validation time; BTC inputs must have at most 8 decimals.
+
+**Reporting currencies (optional)**
+- Provide `reporting_currencies` and `fx_rates` (defined as `1 base_currency = fx_rates[target]`).
+- `fx_rates` must include every currency listed in `reporting_currencies`.
+- Converted ledgers are in `ledgers_by_currency` and quantized to the target currency quantum.
+- `reporting_include_debug_fields` controls whether debug fields are converted/included.
+
+Example request fields:
+```json
+{
+  "currency_code": "EUR",
+  "reporting_currencies": ["USD"],
+  "fx_rates": {"USD": "1.08"}
+}
+```
+
+See `docs/multi_currency.md` and `docs/opie_mvp_spec.md` for full rules.
+
 ## API
 - Run FastAPI:
   - `uv run uvicorn opie.api.app:app --reload`
@@ -100,6 +126,7 @@ Goldens are the output contract.
 ## Docs
 - MVP spec: `docs/opie_mvp_spec.md`
 - Technical architecture: `docs/opie_technical_architecture.md`
+- Multi-currency: `docs/multi_currency.md`
 - Roadmaps: `docs/opie_roadmap.md`, `docs/opie-strategic-roadmap.md`
 - Code map: `docs/codemap.md`
 - Testing plan: `docs/testing_plan.md`

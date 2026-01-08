@@ -35,7 +35,7 @@ Outputs are structured ledgers suitable for UI rendering, exports (JSON/CSV), an
 - Participating dividends and dividend options (PUA, OYT).
 - IUL/VUL features (index crediting strategies, separate accounts).
 - Complex underwriting impacts beyond risk class.
-- Guideline premium test / tax qualification logic beyond corridor proxy.
+- Full statutory tax qualification (beyond the report-only 7702 checker).
 - Policy admin/billing workflows and e-signature flows.
 
 ---
@@ -149,6 +149,18 @@ Each scenario carries its own assumptions. The output contains one ledger per sc
 - `annual_premium` (if no premium schedule)
 - `term_modal_factor` (optional)
 
+### Tax 7702 Assumptions (optional, per scenario)
+- `tax_7702.enabled`: bool
+- `tax_7702.test_type`: `gpt` | `cvat` | `both`
+- `tax_7702.gpt_guideline_single_premium` (GSP)
+- `tax_7702.gpt_guideline_level_premium_annual` (GLP)
+- `tax_7702.gpt_premium_timing`: `bop` | `eop`
+- `tax_7702.cvat_net_single_premium` (NSP)
+- `tax_7702.cvat_cash_value_basis`: `csv` | `av_eop` | `custom`
+- `tax_7702.cvat_cash_value_adjustment` (optional)
+- `tax_7702.corridor_factors` (optional; uses attained age)
+- `tax_7702.tolerance`: Decimal (default `0`)
+
 ### WL Assumptions
 - `cash_value_schedule` (month -> CV)
 - `surrender_value_schedule` (month -> SV)
@@ -205,7 +217,7 @@ Monthly ordering is authoritative:
 - `currency_code`
 - `ledgers`: `{current, guaranteed}`
 - `ledgers_by_currency` (optional): `{currency_code: {current, guaranteed}}`
-- `metadata`: `calc_version`, `schema_version`, `rounding_policy_id`, `currency_code`, optional `reporting_currencies`, `fx_rates`, `reporting_include_debug_fields`, optional `solve` metadata
+- `metadata`: `calc_version`, `schema_version`, `rounding_policy_id`, `currency_code`, optional `reporting_currencies`, `fx_rates`, `reporting_include_debug_fields`, optional `tax_7702` reports, optional `solve` metadata
 
 **LedgerRow (selected fields)**
 - `t`, `policy_year`, `attained_age`, `policy_status`

@@ -25,6 +25,7 @@ A quick orientation to the repository layout and entry points.
 - `opie/core/solve.py` - premium solve (binary search)
 - `opie/core/errors.py` - `AssumptionError`, `EngineError`, `InvariantViolation`
 - `opie/core/time.py` - policy year / attained age utilities
+- `opie/tax/irc_7702.py` - report-only IRC 7702 (GPT/CVAT) checks
 
 ## Products
 - `opie/products/base.py` - hook protocols + result types
@@ -81,6 +82,7 @@ A quick orientation to the repository layout and entry points.
 ## Docs
 - `docs/opie_mvp_spec.md` - normative MVP spec for current implementation
 - `docs/opie_technical_architecture.md` - module boundaries + extension points
+- `docs/multi_currency.md` - base + reporting currency behavior and CLI usage
 - `docs/opie_roadmap.md` - execution roadmap
 - `docs/opie-strategic-roadmap.md` - multi-year vision
 - `docs/testing_plan.md` - comprehensive testing plan
