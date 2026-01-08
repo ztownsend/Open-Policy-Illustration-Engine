@@ -15,15 +15,101 @@ def _ensure(condition: bool, message: str, *, t: int | None = None) -> None:
         raise InvariantViolation(message, t=t)
 
 
-def check_ul_invariants(ledger: Ledger) -> None:
+def _ensure_non_negative(value: Decimal | None, label: str, *, t: int) -> None:
+    if value is None:
+        return
+    _ensure(value >= ZERO, f"{label} negative", t=t)
+
+
+def _check_charge_invariants(row) -> None:
+    if row.charges_assessed is None:
+        return
+    charges_paid = row.charges_paid or ZERO
+    charge_shortfall = row.charge_shortfall or ZERO
+    _ensure(charge_shortfall >= ZERO, "charge_shortfall negative", t=row.t)
+    _ensure(
+        charges_paid + charge_shortfall == row.charges_assessed,
+        "charges_assessed != charges_paid + charge_shortfall",
+        t=row.t,
+    )
+    expected = (
+        (row.policy_fee or ZERO)
+        + (row.admin_fee or ZERO)
+        + (row.coi_charge or ZERO)
+        + (row.rider_charges or ZERO)
+    )
+    _ensure(
+        row.charges_assessed == expected,
+        "charges_assessed != policy_fee + admin_fee + coi_charge + rider_charges",
+        t=row.t,
+    )
+    if row.charges_total is not None:
+        _ensure(
+            row.charges_total == row.charges_assessed,
+            "charges_total != charges_assessed",
+            t=row.t,
+        )
+
+
+def _check_premium_invariants(row) -> None:
+    _ensure_non_negative(row.premium, "premium", t=row.t)
+    _ensure_non_negative(row.premium_load, "premium_load", t=row.t)
+    _ensure_non_negative(row.net_premium_to_av, "net_premium_to_av", t=row.t)
+    _ensure_non_negative(row.cumulative_premium, "cumulative_premium", t=row.t)
+
+
+def _check_cash_value_invariants(row) -> None:
+    _ensure_non_negative(row.account_value_bop, "account_value_bop", t=row.t)
+    _ensure_non_negative(row.account_value_eop, "account_value_eop", t=row.t)
+    _ensure_non_negative(row.cash_surrender_value, "cash_surrender_value", t=row.t)
+    _ensure_non_negative(row.surrender_charge, "surrender_charge", t=row.t)
+    if row.cash_surrender_value is not None and row.account_value_eop is not None:
+        _ensure(
+            row.cash_surrender_value <= row.account_value_eop,
+            "CSV exceeds AV_eop",
+            t=row.t,
+        )
+
+
+def _check_withdrawal_loan_fields(row, *, require_zero: bool) -> None:
+    fields = {
+        "withdrawal": row.withdrawal,
+        "loan_draw": row.loan_draw,
+        "loan_repayment": row.loan_repayment,
+        "loan_interest": row.loan_interest,
+        "loan_balance": row.loan_balance,
+    }
+    for label, value in fields.items():
+        if value is None:
+            continue
+        if require_zero:
+            _ensure(value == ZERO, f"{label} must be zero", t=row.t)
+        else:
+            _ensure_non_negative(value, label, t=row.t)
+
+
+def _check_common_rows(ledger: Ledger) -> None:
     prev_cumulative: Decimal | None = None
     for row in ledger.rows:
-        if row.account_value_eop is not None:
-            _ensure(row.account_value_eop >= ZERO, "AV_eop negative", t=row.t)
-        if row.cash_surrender_value is not None and row.account_value_eop is not None:
+        _check_premium_invariants(row)
+        _check_charge_invariants(row)
+        _ensure_non_negative(row.rider_charges, "rider_charges", t=row.t)
+        _ensure_non_negative(row.corridor_uplift, "corridor_uplift", t=row.t)
+        _ensure_non_negative(row.net_amount_at_risk, "net_amount_at_risk", t=row.t)
+        if prev_cumulative is not None:
             _ensure(
-                row.cash_surrender_value <= row.account_value_eop, "CSV exceeds AV_eop", t=row.t
+                row.cumulative_premium >= prev_cumulative,
+                "cumulative_premium decreased",
+                t=row.t,
             )
+        prev_cumulative = row.cumulative_premium
+
+
+def check_ul_invariants(ledger: Ledger) -> None:
+    _check_common_rows(ledger)
+    for row in ledger.rows:
+        _check_cash_value_invariants(row)
+        _check_withdrawal_loan_fields(row, require_zero=False)
         if row.loan_balance is not None and row.account_value_eop is not None:
             _ensure(row.loan_balance >= ZERO, "loan_balance negative", t=row.t)
             _ensure(
@@ -32,29 +118,11 @@ def check_ul_invariants(ledger: Ledger) -> None:
                 t=row.t,
             )
         if row.corridor_uplift is not None:
-            _ensure(row.corridor_uplift >= ZERO, "corridor_uplift negative", t=row.t)
             _ensure(
                 row.death_benefit >= row.corridor_uplift,
                 "death_benefit below corridor_uplift",
                 t=row.t,
             )
-        if row.charges_assessed is not None:
-            charges_paid = row.charges_paid or ZERO
-            charge_shortfall = row.charge_shortfall or ZERO
-            _ensure(charge_shortfall >= ZERO, "charge_shortfall negative", t=row.t)
-            _ensure(
-                charges_paid + charge_shortfall == row.charges_assessed,
-                "charges_assessed != charges_paid + charge_shortfall",
-                t=row.t,
-            )
-        if row.rider_charges is not None:
-            _ensure(row.rider_charges >= ZERO, "rider_charges negative", t=row.t)
-        if prev_cumulative is not None:
-            _ensure(
-                row.cumulative_premium >= prev_cumulative, "cumulative_premium decreased", t=row.t
-            )
-        prev_cumulative = row.cumulative_premium
-
         if row.policy_status == PolicyStatus.LAPSED:
             _ensure(row.interest_credited == ZERO, "interest credited on lapse", t=row.t)
             _ensure(row.account_value_eop == ZERO, "AV_eop not zero on lapse", t=row.t)
@@ -62,26 +130,26 @@ def check_ul_invariants(ledger: Ledger) -> None:
 
 
 def check_term_invariants(ledger: Ledger) -> None:
-    prev_cumulative: Decimal | None = None
+    _check_common_rows(ledger)
     for row in ledger.rows:
-        if prev_cumulative is not None:
-            _ensure(
-                row.cumulative_premium >= prev_cumulative, "cumulative_premium decreased", t=row.t
-            )
-        prev_cumulative = row.cumulative_premium
-
-        if row.charges_assessed is not None:
-            charges_paid = row.charges_paid or ZERO
-            charge_shortfall = row.charge_shortfall or ZERO
-            _ensure(charge_shortfall >= ZERO, "charge_shortfall negative", t=row.t)
-            _ensure(
-                charges_paid + charge_shortfall == row.charges_assessed,
-                "charges_assessed != charges_paid + charge_shortfall",
-                t=row.t,
-            )
-
+        _check_withdrawal_loan_fields(row, require_zero=True)
         if row.policy_status == PolicyStatus.EXPIRED:
             _ensure(row.death_benefit == ZERO, "DB not zero on expired term", t=row.t)
+
+
+def check_wl_invariants(ledger: Ledger) -> None:
+    _check_common_rows(ledger)
+    for row in ledger.rows:
+        _check_cash_value_invariants(row)
+        _check_withdrawal_loan_fields(row, require_zero=True)
+
+
+def check_annuity_invariants(ledger: Ledger) -> None:
+    _check_common_rows(ledger)
+    for row in ledger.rows:
+        _check_cash_value_invariants(row)
+        _check_withdrawal_loan_fields(row, require_zero=True)
+        _ensure(row.death_benefit == ZERO, "death_benefit must be zero", t=row.t)
 
 
 def check_invariants(product_code: str, ledger: Ledger) -> None:
@@ -90,5 +158,11 @@ def check_invariants(product_code: str, ledger: Ledger) -> None:
         return
     if product_code == "level_term":
         check_term_invariants(ledger)
+        return
+    if product_code == "wl_nonpar":
+        check_wl_invariants(ledger)
+        return
+    if product_code in {"annuity_deferred", "annuity_spia"}:
+        check_annuity_invariants(ledger)
         return
     raise EngineError("Unknown product_code for invariants", product_code=product_code)

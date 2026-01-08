@@ -158,11 +158,22 @@ Monthly ordering is authoritative:
 
 ---
 
-## 9) Loans, Withdrawals, Riders
-- Withdrawals reduce AV before interest.
-- Loan draws increase loan balance and reduce AV.
-- Loan interest accrues monthly; repayments reduce balance.
-- Rider charges are included in total charges deterministically.
+## 9) Optional Features: Riders, Loans, Withdrawals, Solve
+**Riders**
+- Rider charges are added after base charges and included in `charges_assessed`.
+- Rider ordering is deterministic (registry order).
+
+**Loans and withdrawals (current implementation: UL only)**
+- Interest is credited before withdrawals/loans.
+- Loan interest accrues on the prior loan balance before repayment.
+- AV is reduced by withdrawal and loan draw.
+- CSV is computed after surrender charge and loan balance.
+
+**Premium solve (simple_ul only)**
+- Binary search over a level premium applied to months `1..duration_months`.
+- `keep_in_force` targets survival to `target_month`.
+- `target_av` targets `account_value_eop` at `target_month`.
+- Strategy `current_only` solves once and applies to both scenarios; `per_scenario` solves separately.
 
 ---
 

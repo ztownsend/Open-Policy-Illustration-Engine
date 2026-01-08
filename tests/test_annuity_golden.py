@@ -32,5 +32,15 @@ def test_annuity_deferred_golden() -> None:
     _assert_golden(Path("examples/annuity_deferred_request.json"), "annuity_deferred")
 
 
+def test_annuity_deferred_long_golden() -> None:
+    _assert_golden(
+        Path("examples/annuity_deferred_long_request.json"), "annuity_deferred_long"
+    )
+
+
 def test_annuity_spia_golden() -> None:
     _assert_golden(Path("examples/annuity_spia_request.json"), "annuity_spia")
+
+
+def test_annuity_spia_long_golden() -> None:
+    _assert_golden(Path("examples/annuity_spia_long_request.json"), "annuity_spia_long")

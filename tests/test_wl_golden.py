@@ -30,3 +30,7 @@ def _assert_golden(request_path: Path, base_name: str) -> None:
 
 def test_wl_nonpar_golden() -> None:
     _assert_golden(Path("examples/wl_request.json"), "wl")
+
+
+def test_wl_long_golden() -> None:
+    _assert_golden(Path("examples/wl_long_request.json"), "wl_long")
