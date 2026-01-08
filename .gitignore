@@ -40,7 +40,7 @@ htmlcov/
 temp/
 
 # Environment files
-.env
+.env.*
 
 # Jupyter
 .ipynb_checkpoints/

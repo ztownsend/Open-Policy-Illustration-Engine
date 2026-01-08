@@ -16,8 +16,9 @@ Open Policy Illustration Engine (OPIE) is a deterministic, versioned life-insura
 ## Quick Start (uv)
 1) Install Python (optional; uv can install as needed)
    - `uv python install 3.14`
-2) Sync dependencies (non-editable so CLI entrypoint works under Python 3.14)
-   - `uv sync --no-editable`
+2) Sync dependencies (non-editable install required for CLI entrypoint on Py 3.14)
+   - `UV_NO_EDITABLE=1 uv sync`
+   - or `make sync`
 3) Run tests
    - `uv run pytest`
 4) Try the CLI
@@ -76,7 +77,8 @@ Goldens are the output contract.
   - `uv run python scripts/update_golden.py --request examples/ul_simple_request.json --yes`
 
 ## Development Commands (Makefile)
-- `make sync` -> `uv sync --no-editable`
+- `make help`
+- `make sync` -> `uv sync`
 - `make test` -> `uv run pytest`
 - `make lint` -> `uv run ruff check .`
 - `make format` / `make format-check`

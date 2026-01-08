@@ -6,6 +6,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      UV_NO_EDITABLE: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -14,6 +16,9 @@ jobs:
 
       - name: Sync deps
         run: uv sync
+
+      - name: CLI smoke
+        run: uv run opie --help
 
       - name: Lint
         run: uv run ruff check .
