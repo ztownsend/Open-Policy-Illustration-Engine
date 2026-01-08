@@ -7,10 +7,46 @@
       "expected_guaranteed": "../tests/golden/ul_simple_guaranteed.json"
     },
     {
+      "name": "ul_lapse",
+      "request": "../examples/ul_lapse_request.json",
+      "expected_current": "../tests/golden/ul_lapse_current.json",
+      "expected_guaranteed": "../tests/golden/ul_lapse_guaranteed.json"
+    },
+    {
+      "name": "ul_solve",
+      "request": "../examples/ul_solve_request.json",
+      "expected_current": "../tests/golden/ul_solve_current.json",
+      "expected_guaranteed": "../tests/golden/ul_solve_guaranteed.json"
+    },
+    {
+      "name": "ul_loans_withdrawals",
+      "request": "../examples/ul_loans_withdrawals_request.json",
+      "expected_current": "../tests/golden/ul_loans_withdrawals_current.json",
+      "expected_guaranteed": "../tests/golden/ul_loans_withdrawals_guaranteed.json"
+    },
+    {
       "name": "term",
       "request": "../examples/term_request.json",
       "expected_current": "../tests/golden/term_current.json",
       "expected_guaranteed": "../tests/golden/term_guaranteed.json"
+    },
+    {
+      "name": "wl_nonpar",
+      "request": "../examples/wl_request.json",
+      "expected_current": "../tests/golden/wl_current.json",
+      "expected_guaranteed": "../tests/golden/wl_guaranteed.json"
+    },
+    {
+      "name": "annuity_deferred",
+      "request": "../examples/annuity_deferred_request.json",
+      "expected_current": "../tests/golden/annuity_deferred_current.json",
+      "expected_guaranteed": "../tests/golden/annuity_deferred_guaranteed.json"
+    },
+    {
+      "name": "annuity_spia",
+      "request": "../examples/annuity_spia_request.json",
+      "expected_current": "../tests/golden/annuity_spia_current.json",
+      "expected_guaranteed": "../tests/golden/annuity_spia_guaranteed.json"
     }
   ]
 }

@@ -29,6 +29,22 @@ class ScenarioResult:
 
 
 @dataclass(frozen=True)
+class DiffPointer:
+    case: str
+    scenario: str
+    expected_path: str
+    first_diff: str | None
+
+
+@dataclass(frozen=True)
+class ConformanceSummary:
+    passed: bool
+    total_cases: int
+    failed_cases: int
+    diff_pointer: DiffPointer | None
+
+
+@dataclass(frozen=True)
 class CaseResult:
     name: str
     passed: bool
@@ -40,6 +56,8 @@ class ConformanceReport:
     passed: bool
     total_cases: int
     failed_cases: int
+    summary: ConformanceSummary
+    diff_pointer: DiffPointer | None
     cases: list[CaseResult]
 
 
@@ -84,6 +102,7 @@ def _compare_expected(
 def run_conformance(manifest_path: Path) -> ConformanceReport:
     specs = load_case_specs(manifest_path)
     case_results: list[CaseResult] = []
+    first_pointer: DiffPointer | None = None
 
     for spec in specs:
         payload = json.loads(spec.request_path.read_text())
@@ -107,6 +126,13 @@ def run_conformance(manifest_path: Path) -> ConformanceReport:
                 passed=passed,
                 comparison=comparison,
             )
+            if not passed and first_pointer is None:
+                first_pointer = DiffPointer(
+                    case=spec.name,
+                    scenario=scenario_name,
+                    expected_path=str(expected_path),
+                    first_diff=comparison.first_diff if comparison else None,
+                )
 
         case_passed = all(item.passed for item in scenarios.values())
         case_results.append(
@@ -118,10 +144,19 @@ def run_conformance(manifest_path: Path) -> ConformanceReport:
         )
 
     failed_cases = sum(1 for case in case_results if not case.passed)
-    report = ConformanceReport(
-        passed=failed_cases == 0,
+    passed = failed_cases == 0
+    summary = ConformanceSummary(
+        passed=passed,
         total_cases=len(case_results),
         failed_cases=failed_cases,
+        diff_pointer=first_pointer,
+    )
+    report = ConformanceReport(
+        passed=passed,
+        total_cases=len(case_results),
+        failed_cases=failed_cases,
+        summary=summary,
+        diff_pointer=first_pointer,
         cases=case_results,
     )
     return report

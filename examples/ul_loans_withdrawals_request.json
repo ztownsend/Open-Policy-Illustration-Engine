@@ -1,0 +1,36 @@
+{
+  "product_code": "simple_ul",
+  "issue_age": 40,
+  "issue_gender": "F",
+  "risk_class": "NT",
+  "face_amount": "150000",
+  "issue_date": "2025-01-01",
+  "duration_months": 12,
+  "premium_schedule": [
+    {"start_month": 1, "end_month": 12, "amount": "250"}
+  ],
+  "withdrawal_schedule": {"3": "100", "7": "50"},
+  "loan_draw_schedule": {"4": "200"},
+  "loan_repayment_schedule": {"6": "40", "9": "40"},
+  "loan_interest_rate_annual": "0.08",
+  "scenarios": {
+    "current": {
+      "crediting_rate_annual": "0.04",
+      "premium_load_pct": "0.06",
+      "monthly_policy_fee": "5",
+      "monthly_per_thousand_admin_fee": "0.10",
+      "coi_table": {"40": "0.25", "41": "0.27"},
+      "surrender_charge_schedule": {"1": "900", "13": "450"}
+    },
+    "guaranteed": {
+      "crediting_rate_annual": "0.03",
+      "premium_load_pct": "0.06",
+      "monthly_policy_fee": "5",
+      "monthly_per_thousand_admin_fee": "0.10",
+      "coi_table": {"40": "0.30", "41": "0.32"},
+      "surrender_charge_schedule": {"1": "1100", "13": "550"}
+    }
+  },
+  "death_benefit_option": "level",
+  "minimum_account_value_floor": "0"
+}

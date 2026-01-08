@@ -27,6 +27,10 @@ def test_conformance_runner_passes(tmp_path: Path) -> None:
     assert report.passed is True
     assert report.total_cases == 1
     assert report.failed_cases == 0
+    assert report.summary.passed is True
+    assert report.summary.total_cases == 1
+    assert report.summary.failed_cases == 0
+    assert report.summary.diff_pointer is None
 
 
 def test_conformance_runner_fails(tmp_path: Path) -> None:
@@ -51,5 +55,7 @@ def test_conformance_runner_fails(tmp_path: Path) -> None:
     report = run_conformance(manifest_path)
     assert report.passed is False
     assert report.failed_cases == 1
+    assert report.summary.passed is False
+    assert report.summary.diff_pointer is not None
     case = report.cases[0]
     assert case.scenarios["current"].passed is False
