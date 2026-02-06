@@ -20,6 +20,7 @@ Scope:
 - Product hooks (UL/Term/WL/Annuity/Riders).
 - Engine edge cases (lapse/grace, loans/withdrawals, solve).
 - Reporting currency conversion (post-process only).
+- IRC 7702 report-only checks (GPT/CVAT).
 
 Examples:
 - `tests/test_money.py`

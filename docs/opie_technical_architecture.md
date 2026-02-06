@@ -395,6 +395,7 @@ Every `IllustrationResult` includes:
 - optional `reporting_currencies`
 - optional `fx_rates`
 - optional `reporting_include_debug_fields`
+- optional `tax_7702` (per-scenario report-only checks)
 
 Golden files should include these fields so changes are explicit.
 
