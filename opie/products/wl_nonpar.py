@@ -1,4 +1,11 @@
-"""Non-par Whole Life product hooks (simplified)."""
+"""Non-par Whole Life product hooks (simplified).
+
+WL ledger conventions (see docs/opie_mvp_spec.md):
+  - Cash value and surrender value schedules are month-indexed (keyed by t).
+  - No interpolation is performed; values are used as-is for each month.
+  - Missing month entries are errors (raise AssumptionError with context).
+  - Surrender charge = max(0, cash_value - surrender_value).
+"""
 
 from __future__ import annotations
 

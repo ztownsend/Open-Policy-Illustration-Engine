@@ -56,6 +56,10 @@ Outputs are structured ledgers suitable for UI rendering, exports (JSON/CSV), an
 ### `wl_nonpar` (simplified)
 - Table-driven cash value (CV) and surrender value (SV).
 - Premium derived from CV schedule deltas.
+- **Ledger conventions:**
+  - CV and SV schedules are **month-indexed** (keyed by month `t`); no interpolation.
+  - Missing month entries are errors (`AssumptionError` with product, scenario, month context).
+  - Surrender charge = `max(0, CV - SV)` per month.
 
 ### `annuity_deferred` (toy)
 - Accumulation value with interest crediting and surrender charges.
