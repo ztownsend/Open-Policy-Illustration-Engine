@@ -38,8 +38,8 @@ This roadmap is designed to be dropped into `docs/roadmap.md` and executed incre
   - `python scripts/update_golden.py --request examples/<...>.json --yes`
 - CI must fail if outputs drift.
 
-**Status note (2026-01-08):** Checkmarks below reflect repository contents only. CI/test pass status
-was not re-run as part of this update.
+**Status note (2026-03-15):** All phases 0–15 are complete. Plans 01–06 closed.
+CI tests pass on Python 3.11/3.13/3.14.
 
 ---
 
@@ -51,30 +51,30 @@ was not re-run as part of this update.
 - **v0.5**: Whole Life + starter annuity
 - **v0.6**: UI explorer + PDF renderer (separate module)
 - **v0.7**: Batch mode + artifact bundles + conformance suite
-- **v1.0**: Stable contracts + plugin ecosystem + governance
+- **v1.0**: Stable contracts + PyPI package + contributor onboarding
 
 Strategic phases 16+ (post-v1.0) are captured later in this roadmap.
 
 ---
 
-## Status overview (2026-01-08)
+## Status overview (2026-03-15)
 
 | Phase | Theme | Status |
 | --- | --- | --- |
 | 0 | Foundation | Complete |
-| 1 | MVP Engine | Partial (rounding-point guidance pending) |
-| 2 | Developer Experience | Partial (CLI scenario diff pending) |
+| 1 | MVP Engine | Complete |
+| 2 | Developer Experience | Complete |
 | 3 | UL Realism | Complete |
 | 4 | Premium Solve | Complete |
 | 5 | DB Options & Corridor | Complete |
 | 6 | Withdrawals & Loans | Complete |
 | 7 | Riders | Complete |
-| 8 | Whole Life | Partial (ledger conventions doc pending) |
-| 9 | Annuities | Partial (SPIA payouts pending) |
+| 8 | Whole Life | Complete |
+| 9 | Annuities | Complete (SPIA payouts added) |
 | 10 | Assumption Packs | Complete |
-| 11 | Conformance Suite | Partial (publish results pending) |
+| 11 | Conformance Suite | Complete (env metadata added) |
 | 12 | UI Explorer | Complete |
-| 13 | PDF Renderer | Partial (templates/disclosures pending) |
+| 13 | PDF Renderer | Complete (template + disclosure support) |
 | 14 | Batch & Benchmarks | Complete |
 | 15 | Bundles | Complete |
 | 16+ | Strategic Phases | Not started |
@@ -163,7 +163,7 @@ Strategic phases 16+ (post-v1.0) are captured later in this roadmap.
 **Deliverables**
 - [x] Decimal context
 - [x] `quantize_money()` (currency-aware), `quantize_rate()`
-- [ ] Explicit rounding points guidance (document in code; spec-only today)
+- [x] Explicit rounding points guidance (documented in engine.py and money.py)
 
 **Files**
 - `opie/core/money.py`
@@ -346,7 +346,7 @@ Strategic phases 16+ (post-v1.0) are captured later in this roadmap.
 - [x] `opie diff --a ledgerA.json --b ledgerB.json`
   - first month/field difference
   - numeric delta
-- [ ] optional: scenario-to-scenario diff within one result (CLI missing; UI has diff view)
+- [x] scenario-to-scenario diff within one result (`opie diff --within`)
 
 **Files**
 - `opie/cli/diff.py`
@@ -536,7 +536,7 @@ Strategic phases 16+ (post-v1.0) are captured later in this roadmap.
 ## 8.1 Non-par WL (simplified)
 **Deliverables**
 - [x] WL product with table-driven CV and SV
-- [ ] monthly ledger conventions declared (interpolation vs step not documented)
+- [x] monthly ledger conventions declared (step, no interpolation)
 
 **Files**
 - `opie/products/wl_nonpar.py`
@@ -551,7 +551,7 @@ Strategic phases 16+ (post-v1.0) are captured later in this roadmap.
 - [x] accumulation value + surrender charge
 
 ## 9.2 SPIA (toy)
-- [ ] payout factor tables + payment schedule ledger (toy SPIA only)
+- [x] payout factor tables + payment schedule ledger
 
 ---
 
@@ -575,7 +575,7 @@ Strategic phases 16+ (post-v1.0) are captured later in this roadmap.
 
 ## 11.1 Conformance test runner
 - [x] canonical cases + expected outputs
-- [ ] publish results for forks/plugins
+- [x] publish results for forks/plugins (env metadata in reports)
 
 ## 11.2 Comparison harness
 - [x] first-diff reports + max-diff stats
@@ -596,7 +596,7 @@ Strategic phases 16+ (post-v1.0) are captured later in this roadmap.
 # Phase 13 — PDF renderer (separate package)
 **Goal:** formatting only, no math.
 - [x] `opie-pdf` consumes `IllustrationResult` JSON
-- [ ] templates and disclosures per jurisdiction (optional)
+- [x] templates and disclosures per jurisdiction
 
 ---
 
