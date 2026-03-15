@@ -10,7 +10,7 @@ import typer
 from opie import run_illustration
 from opie.cli.compare import compare_command
 from opie.cli.conformance import app as conformance_app
-from opie.cli.diff import diff_ledgers
+from opie.cli.diff import diff_ledgers, diff_within
 from opie.cli.io import read_request, write_csv, write_json
 from opie.cli.pack import app as pack_app
 from opie.cli.batch import run_batch
@@ -102,11 +102,20 @@ def illustrate(
 
 @app.command()
 def diff(
-    a: Path = typer.Option(..., "--a", exists=True, readable=True),
-    b: Path = typer.Option(..., "--b", exists=True, readable=True),
+    a: Path = typer.Option(None, "--a", exists=True, readable=True),
+    b: Path = typer.Option(None, "--b", exists=True, readable=True),
+    within: Path = typer.Option(None, "--within", exists=True, readable=True),
     scenario: str | None = typer.Option(None, "--scenario"),
+    scenario_a: str = typer.Option("current", "--scenario-a"),
+    scenario_b: str = typer.Option("guaranteed", "--scenario-b"),
+    currency: str | None = typer.Option(None, "--currency"),
 ) -> None:
-    message = diff_ledgers(a, b, scenario)
+    if within is not None:
+        message = diff_within(within, scenario_a, scenario_b, currency)
+    elif a is not None and b is not None:
+        message = diff_ledgers(a, b, scenario)
+    else:
+        raise typer.BadParameter("Provide --a/--b for two-file diff or --within for single-file diff")
     typer.echo(message)
 
 

@@ -40,12 +40,41 @@ def _to_decimal(value: Any) -> Decimal | None:
     return None
 
 
+def diff_within(
+    path: Path,
+    scenario_a: str = "current",
+    scenario_b: str = "guaranteed",
+    currency: str | None = None,
+) -> str:
+    """Diff two scenarios within a single result file."""
+    payload = _load_json(path)
+    if currency is not None:
+        lbc = payload.get("ledgers_by_currency")
+        if lbc is None or currency not in lbc:
+            raise ValueError(f"No ledgers_by_currency for currency '{currency}'")
+        container = lbc[currency]
+    else:
+        container = payload.get("ledgers")
+        if container is None:
+            raise ValueError("payload must include ledgers")
+    if scenario_a not in container:
+        raise ValueError(f"Scenario '{scenario_a}' not found in result")
+    if scenario_b not in container:
+        raise ValueError(f"Scenario '{scenario_b}' not found in result")
+    ledger_a = container[scenario_a]
+    ledger_b = container[scenario_b]
+    return _diff_rows(ledger_a, ledger_b)
+
+
 def diff_ledgers(path_a: Path, path_b: Path, scenario: str | None = None) -> str:
     payload_a = _load_json(path_a)
     payload_b = _load_json(path_b)
     ledger_a = _extract_ledger(payload_a, scenario)
     ledger_b = _extract_ledger(payload_b, scenario)
+    return _diff_rows(ledger_a, ledger_b)
 
+
+def _diff_rows(ledger_a: dict[str, Any], ledger_b: dict[str, Any]) -> str:
     rows_a = ledger_a.get("rows", [])
     rows_b = ledger_b.get("rows", [])
     max_len = max(len(rows_a), len(rows_b))
