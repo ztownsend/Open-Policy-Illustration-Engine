@@ -58,7 +58,27 @@ def _build_pdf(lines: list[str]) -> bytes:
     return bytes(pdf)
 
 
-def _lines_from_result(result: dict[str, Any]) -> list[str]:
+_DISCLOSURE_REGISTRY: dict[str, list[str]] = {}
+
+
+def register_disclosures(jurisdiction: str, lines: list[str]) -> None:
+    """Register disclosure text for a jurisdiction."""
+    _DISCLOSURE_REGISTRY[jurisdiction] = list(lines)
+
+
+def get_disclosures(jurisdiction: str | None) -> list[str]:
+    """Return disclosure lines for a jurisdiction, or empty list."""
+    if jurisdiction is None:
+        return []
+    return list(_DISCLOSURE_REGISTRY.get(jurisdiction, []))
+
+
+def _lines_from_result(
+    result: dict[str, Any],
+    *,
+    template_id: str = "base",
+    jurisdiction: str | None = None,
+) -> list[str]:
     lines: list[str] = ["OPIE Illustration"]
     product_code = result.get("product_code")
     if product_code:
@@ -83,20 +103,39 @@ def _lines_from_result(result: dict[str, Any]) -> list[str]:
             )
         if len(rows) > 5:
             lines.append("...")
+
+    disclosures = get_disclosures(jurisdiction)
+    if disclosures:
+        lines.append("")
+        lines.append("--- Disclosures ---")
+        lines.extend(disclosures)
+
     return lines
 
 
-def render_pdf(result: IllustrationResult | dict[str, Any], out_path: Path) -> None:
+def render_pdf(
+    result: IllustrationResult | dict[str, Any],
+    out_path: Path,
+    *,
+    template_id: str = "base",
+    jurisdiction: str | None = None,
+) -> None:
     payload: dict[str, Any]
     if isinstance(result, IllustrationResult):
         payload = result.model_dump(mode="python")
     else:
         payload = dict(result)
-    lines = _lines_from_result(payload)
+    lines = _lines_from_result(payload, template_id=template_id, jurisdiction=jurisdiction)
     pdf_bytes = _build_pdf(lines)
     out_path.write_bytes(pdf_bytes)
 
 
-def render_pdf_from_json(in_path: Path, out_path: Path) -> None:
+def render_pdf_from_json(
+    in_path: Path,
+    out_path: Path,
+    *,
+    template_id: str = "base",
+    jurisdiction: str | None = None,
+) -> None:
     payload = json.loads(in_path.read_text())
-    render_pdf(payload, out_path)
+    render_pdf(payload, out_path, template_id=template_id, jurisdiction=jurisdiction)

@@ -1,5 +1,5 @@
 # PDF Templates + Jurisdiction Disclosures
-Status: planned (2026-01-08)
+Status: completed (2026-03-15)
 Owner: TBD
 
 ## 1) Summary
