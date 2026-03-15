@@ -3,7 +3,7 @@ requires = ["hatchling>=1.24"]
 build-backend = "hatchling.build"
 
 [project]
-name = "opie"
+name = "opie-engine"
 version = "0.1.0"
 description = "Open Policy Illustration Engine (OPIE) — deterministic life insurance illustration engine"
 readme = "README.md"

@@ -14,7 +14,7 @@ __all__ = [
     "run_illustration",
     "solve_illustration",
 ]
-__version__ = _version("opie")
+__version__ = _version("opie-engine")
 
 
 def run_illustration(request: IllustrationRequest) -> IllustrationResult:
