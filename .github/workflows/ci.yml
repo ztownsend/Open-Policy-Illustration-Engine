@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python: ["3.14"]
+        python: ["3.11", "3.13", "3.14"]
     env:
       UV_NO_EDITABLE: "1"
       UV_NO_SYNC: "1"
