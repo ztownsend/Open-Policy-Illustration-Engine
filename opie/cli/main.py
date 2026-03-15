@@ -115,7 +115,9 @@ def diff(
     elif a is not None and b is not None:
         message = diff_ledgers(a, b, scenario)
     else:
-        raise typer.BadParameter("Provide --a/--b for two-file diff or --within for single-file diff")
+        raise typer.BadParameter(
+            "Provide --a/--b for two-file diff or --within for single-file diff"
+        )
     typer.echo(message)
 
 
