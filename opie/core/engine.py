@@ -177,6 +177,27 @@ def run_scenario(
 
         av_eop_quantized = quantize_money(av_eop, currency_code)
 
+        # ── Rounding points (normative, do not reorder) ────────────────
+        # All monetary ledger fields are quantized to the base currency
+        # quantum via quantize_money() at ledger-row construction time.
+        # Rate fields (e.g. monthly crediting rate) are quantized via
+        # quantize_rate() at computation time (see _monthly_rate above).
+        #
+        # Quantization points in order of application:
+        #   1. premium, premium_load, net_premium_to_av  (from hooks)
+        #   2. policy_fee, coi_charge, admin_fee, charges_total,
+        #      charges_assessed, charges_paid, charge_shortfall,
+        #      rider_charges, net_amount_at_risk
+        #   3. account_value_mid_raw
+        #   4. interest_credited
+        #   5. account_value_eop  (quantized; feeds next month's av_bop)
+        #   6. surrender_charge, cash_surrender_value
+        #   7. death_benefit, corridor_uplift
+        #   8. withdrawal, loan_draw, loan_repayment, loan_interest,
+        #      loan_balance
+        #
+        # See docs/opie_mvp_spec.md for the normative ordering spec.
+        # ────────────────────────────────────────────────────────────────
         row = LedgerRow(
             t=t,
             policy_year=policy_year,

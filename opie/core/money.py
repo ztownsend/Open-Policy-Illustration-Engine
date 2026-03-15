@@ -1,4 +1,13 @@
-"""Decimal context and rounding helpers."""
+"""Decimal context and rounding helpers.
+
+Rounding policy summary:
+  - Money fields use quantize_money() → currency-specific quantum
+    (USD/EUR = 0.01, BTC = 0.00000001).
+  - Rate fields use quantize_rate() → 10 decimal places (RATE_QUANT).
+  - Rounding mode is ROUND_HALF_UP everywhere.
+  - Rounding points in the engine are documented in opie/core/engine.py
+    above ledger-row construction.
+"""
 
 from __future__ import annotations
 
