@@ -70,6 +70,7 @@ class WLScenarioAssumptions(StrictBaseModel):
 class AnnuityScenarioAssumptions(StrictBaseModel):
     crediting_rate_annual: DecimalInput
     surrender_charge_schedule: dict[int, DecimalInput]
+    spia_payout_factors: dict[int, DecimalInput] | None = None
     tax_7702: Tax7702Assumptions | None = None
 
 

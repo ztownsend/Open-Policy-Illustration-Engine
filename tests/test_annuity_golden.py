@@ -42,3 +42,7 @@ def test_annuity_spia_golden() -> None:
 
 def test_annuity_spia_long_golden() -> None:
     _assert_golden(Path("examples/annuity_spia_long_request.json"), "annuity_spia_long")
+
+
+def test_annuity_spia_payout_golden() -> None:
+    _assert_golden(Path("examples/annuity_spia_payout_request.json"), "annuity_spia_payout")

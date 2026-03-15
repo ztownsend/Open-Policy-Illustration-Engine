@@ -1,0 +1,40 @@
+{
+  "product_code": "annuity_spia",
+  "issue_age": 65,
+  "issue_gender": "F",
+  "risk_class": "NT",
+  "face_amount": "100000",
+  "issue_date": "2024-01-01",
+  "duration_months": 24,
+  "payout_start_month": 1,
+  "premium_schedule": [
+    {
+      "month": 1,
+      "amount": "100000"
+    }
+  ],
+  "scenarios": {
+    "current": {
+      "crediting_rate_annual": "0.02",
+      "surrender_charge_schedule": {
+        "1": "0",
+        "24": "0"
+      },
+      "spia_payout_factors": {
+        "65": "0.06",
+        "66": "0.062"
+      }
+    },
+    "guaranteed": {
+      "crediting_rate_annual": "0.00",
+      "surrender_charge_schedule": {
+        "1": "0",
+        "24": "0"
+      },
+      "spia_payout_factors": {
+        "65": "0.055",
+        "66": "0.057"
+      }
+    }
+  }
+}

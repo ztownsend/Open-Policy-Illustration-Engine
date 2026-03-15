@@ -134,6 +134,10 @@ class IllustrationRequest(StrictBaseModel):
     term_length_months: int | None = None
     modal_factor: DecimalInput | None = None
 
+    # SPIA-specific
+    payout_start_month: int = 1
+    payout_end_month: int | None = None
+
     @field_validator("issue_age", "duration_months")
     @classmethod
     def _validate_positive_ints(cls, value: int) -> int:
@@ -421,6 +425,8 @@ class LedgerRow(StrictBaseModel):
     loan_repayment: Decimal | None = None
     loan_interest: Decimal | None = None
     loan_balance: Decimal | None = None
+
+    annuity_payment: Decimal | None = None
 
     term_month: int | None = None
     coverage_in_force: bool | None = None

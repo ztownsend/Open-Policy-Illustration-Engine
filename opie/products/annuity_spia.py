@@ -1,4 +1,14 @@
-"""SPIA (single premium immediate annuity) hooks (toy)."""
+"""SPIA (single premium immediate annuity) hooks.
+
+Payout conventions:
+  - Payout factors are keyed by attained age in spia_payout_factors.
+  - Monthly payment = face_amount * factor / 12, applied during the
+    payout window (payout_start_month to payout_end_month).
+  - Missing factor for an attained age during the payout window raises
+    AssumptionError.
+  - If spia_payout_factors is not provided, annuity_payment is zero
+    (backward-compatible with the original toy implementation).
+"""
 
 from __future__ import annotations
 
@@ -12,6 +22,7 @@ from opie.core.types import IllustrationRequest, PolicyStatus
 from opie.products.base import ChargeResult, DeathBenefitResult, PremiumResult
 
 ZERO = Decimal("0")
+TWELVE = Decimal("12")
 
 
 def _require_annuity_scenario(scenario: ScenarioAssumptions) -> AnnuityScenarioAssumptions:
@@ -28,6 +39,28 @@ def _resolve_premium(schedule, t: int) -> Decimal:
             if rule.start_month <= t <= rule.end_month:
                 return rule.amount
     return ZERO
+
+
+def compute_annuity_payment(
+    state: Any,
+    request: IllustrationRequest,
+    scenario: AnnuityScenarioAssumptions,
+) -> Decimal:
+    """Compute monthly annuity payment for SPIA."""
+    if scenario.spia_payout_factors is None:
+        return ZERO
+    payout_end = request.payout_end_month or request.duration_months
+    if state.t < request.payout_start_month or state.t > payout_end:
+        return ZERO
+    factor = scenario.spia_payout_factors.get(state.attained_age)
+    if factor is None:
+        raise AssumptionError(
+            "Missing SPIA payout factor",
+            product_code=request.product_code,
+            scenario=getattr(state, "scenario_name", None),
+            t=state.t,
+        )
+    return request.face_amount * factor / TWELVE
 
 
 class SPIAHooks:

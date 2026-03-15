@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from hashlib import sha256
 
-from opie.assumptions.models import ScenarioAssumptions
+from opie.assumptions.models import AnnuityScenarioAssumptions, ScenarioAssumptions
 from opie.core.errors import EngineError
 from opie.core.ledger import dumps_json
 from opie.core.money import quantize_money, quantize_rate
@@ -22,6 +22,7 @@ from opie.core.types import (
     build_metadata,
 )
 from opie.products.base import ProductHooks
+from opie.products.annuity_spia import compute_annuity_payment
 from opie.products.riders.registry import get_rider_hook
 from opie.tax.irc_7702 import run_7702_checks
 
@@ -138,6 +139,18 @@ def run_scenario(
             av_eop_pre = av_mid + interest_credited
             lapsed = False
 
+        # Annuity payout (SPIA only; after interest, before withdrawals)
+        if lapsed or request.product_code != "annuity_spia":
+            annuity_payment = ZERO
+        else:
+            if isinstance(scenario, AnnuityScenarioAssumptions):
+                annuity_payment = compute_annuity_payment(state, request, scenario)
+            else:
+                annuity_payment = ZERO
+            av_eop_pre = av_eop_pre - annuity_payment
+            if av_eop_pre < ZERO:
+                av_eop_pre = ZERO
+
         if lapsed:
             withdrawal = ZERO
             loan_draw = ZERO
@@ -229,6 +242,7 @@ def run_scenario(
             loan_repayment=quantize_money(loan_repayment, currency_code),
             loan_interest=quantize_money(loan_interest, currency_code),
             loan_balance=quantize_money(loan_balance, currency_code),
+            annuity_payment=quantize_money(annuity_payment, currency_code),
             term_month=term_month,
             coverage_in_force=coverage_in_force,
             debug_av_mid_raw_unrounded=(
