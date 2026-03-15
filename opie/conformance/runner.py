@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import platform
+import subprocess
+import sys
 from dataclasses import dataclass
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +15,54 @@ from opie import run_illustration
 from opie.conformance.compare import ComparisonResult, compare_payloads
 from opie.core.ledger import dumps_json
 from opie.core.types import IllustrationRequest
+from opie.core.versioning import CALC_VERSION, ROUNDING_POLICY_ID, SCHEMA_VERSION
+
+
+@dataclass(frozen=True)
+class EnvironmentMetadata:
+    calc_version: str
+    schema_version: str
+    rounding_policy_id: str
+    python_version: str
+    platform: str
+    timestamp: str
+    git_sha: str | None
+    git_dirty: bool | None
+
+
+def _gather_environment() -> EnvironmentMetadata:
+    git_sha: str | None = None
+    git_dirty: bool | None = None
+    try:
+        sha = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if sha.returncode == 0:
+            git_sha = sha.stdout.strip()
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if dirty.returncode == 0:
+            git_dirty = len(dirty.stdout.strip()) > 0
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
+    return EnvironmentMetadata(
+        calc_version=CALC_VERSION,
+        schema_version=SCHEMA_VERSION,
+        rounding_policy_id=ROUNDING_POLICY_ID,
+        python_version=sys.version,
+        platform=platform.platform(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        git_sha=git_sha,
+        git_dirty=git_dirty,
+    )
 
 
 @dataclass(frozen=True)
@@ -58,6 +110,7 @@ class ConformanceReport:
     failed_cases: int
     summary: ConformanceSummary
     diff_pointer: DiffPointer | None
+    environment: EnvironmentMetadata
     cases: list[CaseResult]
 
 
@@ -100,6 +153,7 @@ def _compare_expected(
 
 
 def run_conformance(manifest_path: Path) -> ConformanceReport:
+    env = _gather_environment()
     specs = load_case_specs(manifest_path)
     case_results: list[CaseResult] = []
     first_pointer: DiffPointer | None = None
@@ -157,6 +211,7 @@ def run_conformance(manifest_path: Path) -> ConformanceReport:
         failed_cases=failed_cases,
         summary=summary,
         diff_pointer=first_pointer,
+        environment=env,
         cases=case_results,
     )
     return report

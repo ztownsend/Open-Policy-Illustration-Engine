@@ -31,6 +31,11 @@ def test_conformance_runner_passes(tmp_path: Path) -> None:
     assert report.summary.total_cases == 1
     assert report.summary.failed_cases == 0
     assert report.summary.diff_pointer is None
+    assert report.environment is not None
+    assert report.environment.calc_version
+    assert report.environment.schema_version
+    assert report.environment.python_version
+    assert report.environment.timestamp
 
 
 def test_conformance_runner_fails(tmp_path: Path) -> None:
