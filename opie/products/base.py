@@ -31,6 +31,20 @@ class DeathBenefitResult:
     corridor_uplift: Decimal
 
 
+ZERO = Decimal("0")
+
+
+def resolve_premium(schedule: Any, t: int) -> Decimal:
+    """Resolve premium amount for month t from a premium schedule."""
+    for rule in schedule or []:
+        if rule.month is not None and rule.month == t:
+            return rule.amount
+        if rule.start_month is not None and rule.end_month is not None:
+            if rule.start_month <= t <= rule.end_month:
+                return rule.amount
+    return ZERO
+
+
 class ProductHooks(Protocol):
     def premium_and_loads(
         self,

@@ -19,7 +19,7 @@ from opie.assumptions.models import AnnuityScenarioAssumptions, ScenarioAssumpti
 from opie.core.errors import AssumptionError
 from opie.core.money import quantize_money
 from opie.core.types import IllustrationRequest, PolicyStatus
-from opie.products.base import ChargeResult, DeathBenefitResult, PremiumResult
+from opie.products.base import ChargeResult, DeathBenefitResult, PremiumResult, resolve_premium
 
 ZERO = Decimal("0")
 TWELVE = Decimal("12")
@@ -29,16 +29,6 @@ def _require_annuity_scenario(scenario: ScenarioAssumptions) -> AnnuityScenarioA
     if not isinstance(scenario, AnnuityScenarioAssumptions):
         raise AssumptionError("Annuity scenario assumptions required")
     return scenario
-
-
-def _resolve_premium(schedule, t: int) -> Decimal:
-    for rule in schedule or []:
-        if rule.month is not None and rule.month == t:
-            return rule.amount
-        if rule.start_month is not None and rule.end_month is not None:
-            if rule.start_month <= t <= rule.end_month:
-                return rule.amount
-    return ZERO
 
 
 def compute_annuity_payment(
@@ -70,7 +60,7 @@ class SPIAHooks:
         request: IllustrationRequest,
         scenario: ScenarioAssumptions,
     ) -> PremiumResult:
-        premium = _resolve_premium(request.premium_schedule, state.t)
+        premium = resolve_premium(request.premium_schedule, state.t)
         currency_code = request.currency_code
         return PremiumResult(
             premium=quantize_money(premium, currency_code),

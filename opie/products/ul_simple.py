@@ -9,7 +9,7 @@ from opie.assumptions.models import ScenarioAssumptions, ULScenarioAssumptions
 from opie.core.errors import AssumptionError
 from opie.core.money import quantize_money, quantize_rate
 from opie.core.types import IllustrationRequest, PolicyStatus
-from opie.products.base import ChargeResult, DeathBenefitResult, PremiumResult
+from opie.products.base import ChargeResult, DeathBenefitResult, PremiumResult, resolve_premium
 
 ZERO = Decimal("0")
 TWELVE = Decimal("12")
@@ -22,16 +22,6 @@ def _require_ul_scenario(scenario: ScenarioAssumptions) -> ULScenarioAssumptions
     return scenario
 
 
-def _resolve_premium(schedule, t: int) -> Decimal:
-    for rule in schedule or []:
-        if rule.month is not None and rule.month == t:
-            return rule.amount
-        if rule.start_month is not None and rule.end_month is not None:
-            if rule.start_month <= t <= rule.end_month:
-                return rule.amount
-    return ZERO
-
-
 class SimpleULHooks:
     def premium_and_loads(
         self,
@@ -40,7 +30,7 @@ class SimpleULHooks:
         scenario: ScenarioAssumptions,
     ) -> PremiumResult:
         ul_scenario = _require_ul_scenario(scenario)
-        premium = _resolve_premium(request.premium_schedule, state.t)
+        premium = resolve_premium(request.premium_schedule, state.t)
         premium_load = premium * ul_scenario.premium_load_pct
         net_premium_to_av = premium - premium_load
         currency_code = request.currency_code
