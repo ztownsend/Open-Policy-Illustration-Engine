@@ -123,5 +123,54 @@ app.command("compare")(compare_command)
 app.command("batch")(run_batch)
 
 
+@app.command()
+def validate(
+    in_path: Path = typer.Option(..., "--in", exists=True, readable=True),
+) -> None:
+    """Validate a request JSON without running the illustration."""
+    request = read_request(in_path)
+    typer.echo(f"Valid {request.product_code} request ({request.duration_months} months)")
+
+
+@app.command()
+def quickstart(
+    out_path: Path = typer.Option("opie_example.json", "--out"),
+    product: str = typer.Option("simple_ul", "--product"),
+) -> None:
+    """Generate a working example request to get started quickly."""
+    import json
+
+    examples_dir = Path(__file__).resolve().parents[2] / "examples"
+    product_map = {
+        "simple_ul": "ul_simple_request.json",
+        "level_term": "term_request.json",
+        "wl_nonpar": "wl_request.json",
+        "annuity_deferred": "annuity_deferred_request.json",
+        "annuity_spia": "annuity_spia_request.json",
+    }
+    filename = product_map.get(product)
+    if filename is None:
+        raise typer.BadParameter(f"Unknown product: {product}. Options: {', '.join(product_map)}")
+    source = examples_dir / filename
+    if not source.exists():
+        raise typer.BadParameter(f"Example file not found: {source}")
+    payload = json.loads(source.read_text())
+    out_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    typer.echo(f"Wrote {product} example to {out_path}")
+    typer.echo(f"Run: opie illustrate --in {out_path} --out result.json")
+
+
+@app.command()
+def version() -> None:
+    """Print OPIE version information."""
+    from opie import __version__
+    from opie.core.versioning import CALC_VERSION, SCHEMA_VERSION, ROUNDING_POLICY_ID
+
+    typer.echo(f"opie {__version__}")
+    typer.echo(f"  calc_version: {CALC_VERSION}")
+    typer.echo(f"  schema_version: {SCHEMA_VERSION}")
+    typer.echo(f"  rounding_policy_id: {ROUNDING_POLICY_ID}")
+
+
 if __name__ == "__main__":
     app()
