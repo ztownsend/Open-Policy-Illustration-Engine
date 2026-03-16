@@ -100,3 +100,18 @@ class ProductHooks(Protocol):
         scenario: ScenarioAssumptions,
         t: int,
     ) -> Decimal: ...
+
+    def credit_interest(
+        self,
+        state: Any,
+        request: IllustrationRequest,
+        scenario: ScenarioAssumptions,
+        av_mid: Decimal,
+    ) -> Decimal: ...
+
+    def benefit_payout(
+        self,
+        state: Any,
+        request: IllustrationRequest,
+        scenario: ScenarioAssumptions,
+    ) -> Decimal: ...

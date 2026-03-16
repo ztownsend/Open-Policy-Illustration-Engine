@@ -131,3 +131,20 @@ class LevelTermHooks:
         t: int,
     ) -> Decimal:
         return quantize_money(ZERO, request.currency_code)
+
+    def credit_interest(
+        self,
+        state: Any,
+        request: IllustrationRequest,
+        scenario: ScenarioAssumptions,
+        av_mid: Decimal,
+    ) -> Decimal:
+        return ZERO
+
+    def benefit_payout(
+        self,
+        state: Any,
+        request: IllustrationRequest,
+        scenario: ScenarioAssumptions,
+    ) -> Decimal:
+        return ZERO

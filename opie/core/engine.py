@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from hashlib import sha256
 
-from opie.assumptions.models import AnnuityScenarioAssumptions, ScenarioAssumptions
+from opie.assumptions.models import ScenarioAssumptions
 from opie.core.errors import EngineError
 from opie.core.ledger import dumps_json
 from opie.core.money import quantize_money, quantize_rate
@@ -22,12 +22,10 @@ from opie.core.types import (
     build_metadata,
 )
 from opie.products.base import ProductHooks
-from opie.products.annuity_spia import compute_annuity_payment
 from opie.products.riders.registry import get_rider_hook
 from opie.tax.irc_7702 import run_7702_checks
 
 ZERO = Decimal("0")
-ONE = Decimal("1")
 TWELVE = Decimal("12")
 
 
@@ -39,17 +37,6 @@ class ProjectionState:
     cumulative_premium: Decimal
     av_eop_prev: Decimal
     scenario_name: str
-
-
-def _monthly_rate(scenario: ScenarioAssumptions) -> Decimal:
-    annual_rate = getattr(scenario, "crediting_rate_annual", ZERO)
-    mode = getattr(scenario, "interest_mode", "nominal_div_12")
-    if mode == "effective_monthly":
-        monthly_rate = (ONE + annual_rate).ln() / TWELVE
-        monthly_rate = monthly_rate.exp() - ONE
-    else:
-        monthly_rate = annual_rate / TWELVE
-    return quantize_rate(monthly_rate)
 
 
 def _request_id(request: IllustrationRequest) -> str:
@@ -135,21 +122,19 @@ def run_scenario(
             grace_counter = 0
             floor = request.minimum_account_value_floor or ZERO
             av_mid = av_mid_raw if av_mid_raw > floor else floor
-            interest_credited = av_mid * _monthly_rate(scenario)
+            interest_credited = hooks.credit_interest(state, request, scenario, av_mid)
             av_eop_pre = av_mid + interest_credited
             lapsed = False
 
-        # Annuity payout (SPIA only; after interest, before withdrawals)
-        if lapsed or request.product_code != "annuity_spia":
+        # Benefit payout (e.g. SPIA annuity payments; after interest, before withdrawals)
+        if lapsed:
             annuity_payment = ZERO
         else:
-            if isinstance(scenario, AnnuityScenarioAssumptions):
-                annuity_payment = compute_annuity_payment(state, request, scenario)
-            else:
-                annuity_payment = ZERO
-            av_eop_pre = av_eop_pre - annuity_payment
-            if av_eop_pre < ZERO:
-                av_eop_pre = ZERO
+            annuity_payment = hooks.benefit_payout(state, request, scenario)
+            if annuity_payment > ZERO:
+                av_eop_pre = av_eop_pre - annuity_payment
+                if av_eop_pre < ZERO:
+                    av_eop_pre = ZERO
 
         if lapsed:
             withdrawal = ZERO
@@ -194,7 +179,7 @@ def run_scenario(
         # All monetary ledger fields are quantized to the base currency
         # quantum via quantize_money() at ledger-row construction time.
         # Rate fields (e.g. monthly crediting rate) are quantized via
-        # quantize_rate() at computation time (see _monthly_rate above).
+        # quantize_rate() at computation time (in product hooks).
         #
         # Quantization points in order of application:
         #   1. premium, premium_load, net_premium_to_av  (from hooks)

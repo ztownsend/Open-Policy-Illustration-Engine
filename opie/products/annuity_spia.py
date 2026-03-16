@@ -17,7 +17,7 @@ from typing import Any
 
 from opie.assumptions.models import AnnuityScenarioAssumptions, ScenarioAssumptions
 from opie.core.errors import AssumptionError
-from opie.core.money import quantize_money
+from opie.core.money import quantize_money, quantize_rate
 from opie.core.types import IllustrationRequest, PolicyStatus
 from opie.products.base import ChargeResult, DeathBenefitResult, PremiumResult, resolve_premium
 
@@ -135,3 +135,23 @@ class SPIAHooks:
             annuity_scenario.surrender_charge_schedule.get(t, ZERO),
             request.currency_code,
         )
+
+    def credit_interest(
+        self,
+        state: Any,
+        request: IllustrationRequest,
+        scenario: ScenarioAssumptions,
+        av_mid: Decimal,
+    ) -> Decimal:
+        annual_rate = getattr(scenario, "crediting_rate_annual", ZERO)
+        monthly_rate = quantize_rate(annual_rate / TWELVE)
+        return av_mid * monthly_rate
+
+    def benefit_payout(
+        self,
+        state: Any,
+        request: IllustrationRequest,
+        scenario: ScenarioAssumptions,
+    ) -> Decimal:
+        annuity_scenario = _require_annuity_scenario(scenario)
+        return compute_annuity_payment(state, request, annuity_scenario)

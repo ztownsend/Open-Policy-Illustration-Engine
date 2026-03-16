@@ -40,6 +40,14 @@ class DummyHooks:
     def surrender_charge(self, state, request, scenario, t):
         return Decimal("0")
 
+    def credit_interest(self, state, request, scenario, av_mid):
+        annual_rate = getattr(scenario, "crediting_rate_annual", Decimal("0"))
+        monthly_rate = annual_rate / Decimal("12")
+        return av_mid * monthly_rate
+
+    def benefit_payout(self, state, request, scenario):
+        return Decimal("0")
+
 
 class DummyLapseHooks(DummyHooks):
     def premium_and_loads(self, state, request, scenario):

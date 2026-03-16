@@ -36,6 +36,12 @@ class NegativeHooks:
     def surrender_charge(self, state, request, scenario, t):
         return Decimal("0")
 
+    def credit_interest(self, state, request, scenario, av_mid):
+        return Decimal("0")
+
+    def benefit_payout(self, state, request, scenario):
+        return Decimal("0")
+
 
 def test_grace_period_delays_lapse() -> None:
     scenario = ULScenarioAssumptions(

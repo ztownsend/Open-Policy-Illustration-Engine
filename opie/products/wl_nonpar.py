@@ -137,3 +137,20 @@ class WLNonParHooks:
         if charge < ZERO:
             charge = ZERO
         return quantize_money(charge, request.currency_code)
+
+    def credit_interest(
+        self,
+        state: Any,
+        request: IllustrationRequest,
+        scenario: ScenarioAssumptions,
+        av_mid: Decimal,
+    ) -> Decimal:
+        return ZERO
+
+    def benefit_payout(
+        self,
+        state: Any,
+        request: IllustrationRequest,
+        scenario: ScenarioAssumptions,
+    ) -> Decimal:
+        return ZERO

@@ -12,6 +12,7 @@ from opie.core.types import IllustrationRequest, PolicyStatus
 from opie.products.base import ChargeResult, DeathBenefitResult, PremiumResult, resolve_premium
 
 ZERO = Decimal("0")
+ONE = Decimal("1")
 TWELVE = Decimal("12")
 THOUSAND = Decimal("1000")
 
@@ -149,3 +150,28 @@ class SimpleULHooks:
         ul_scenario = _require_ul_scenario(scenario)
         charge = ul_scenario.surrender_charge_schedule.get(t, ZERO)
         return quantize_money(charge, request.currency_code)
+
+    def credit_interest(
+        self,
+        state: Any,
+        request: IllustrationRequest,
+        scenario: ScenarioAssumptions,
+        av_mid: Decimal,
+    ) -> Decimal:
+        annual_rate = getattr(scenario, "crediting_rate_annual", ZERO)
+        mode = getattr(scenario, "interest_mode", "nominal_div_12")
+        if mode == "effective_monthly":
+            monthly_rate = (ONE + annual_rate).ln() / TWELVE
+            monthly_rate = monthly_rate.exp() - ONE
+        else:
+            monthly_rate = annual_rate / TWELVE
+        monthly_rate = quantize_rate(monthly_rate)
+        return av_mid * monthly_rate
+
+    def benefit_payout(
+        self,
+        state: Any,
+        request: IllustrationRequest,
+        scenario: ScenarioAssumptions,
+    ) -> Decimal:
+        return ZERO
