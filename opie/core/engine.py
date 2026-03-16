@@ -239,6 +239,9 @@ def run_scenario(
             debug_account_value_eop_unrounded=(
                 quantize_money(av_eop, currency_code) if request.debug else None
             ),
+            debug_index_account_detail=(
+                getattr(hooks, "last_account_detail", None) or None
+            ),
         )
         rows.append(row)
 

@@ -22,12 +22,15 @@ from typing import Any
 
 from opie.assumptions.models import IULScenarioAssumptions, IndexAccount, ScenarioAssumptions
 from opie.core.errors import AssumptionError
-from opie.core.money import quantize_rate
+from opie.core.money import quantize_money, quantize_rate
 from opie.core.types import IllustrationRequest
 from opie.products.ul_simple import SimpleULHooks
 
 ZERO = Decimal("0")
 TWELVE = Decimal("12")
+
+# Sentinel for "no debug detail" — avoids None ambiguity
+_NO_DETAIL: list[dict[str, str]] = []
 
 
 def _account_monthly_rate(account: IndexAccount) -> Decimal:
@@ -49,7 +52,14 @@ def _require_iul_scenario(scenario: ScenarioAssumptions) -> IULScenarioAssumptio
 
 
 class IndexedULHooks(SimpleULHooks):
-    """IUL hooks — inherits all UL behavior, overrides interest crediting."""
+    """IUL hooks — inherits all UL behavior, overrides interest crediting.
+
+    After credit_interest() is called, last_account_detail contains the
+    per-account breakdown (populated only when request.debug is True).
+    """
+
+    def __init__(self) -> None:
+        self.last_account_detail: list[dict[str, str]] = _NO_DETAIL
 
     def credit_interest(
         self,
@@ -60,8 +70,20 @@ class IndexedULHooks(SimpleULHooks):
     ) -> Decimal:
         iul_scenario = _require_iul_scenario(scenario)
         total_interest = ZERO
+        detail: list[dict[str, str]] = []
+        currency_code = request.currency_code
         for account in iul_scenario.index_accounts:
             account_av = av_mid * account.allocation
             monthly_rate = _account_monthly_rate(account)
-            total_interest += account_av * monthly_rate
+            account_interest = account_av * monthly_rate
+            total_interest += account_interest
+            if request.debug:
+                detail.append({
+                    "name": account.name,
+                    "allocation": str(account.allocation),
+                    "strategy": account.strategy_type,
+                    "monthly_rate": str(quantize_rate(monthly_rate)),
+                    "interest": str(quantize_money(account_interest, currency_code)),
+                })
+        self.last_account_detail = detail if request.debug else _NO_DETAIL
         return total_interest

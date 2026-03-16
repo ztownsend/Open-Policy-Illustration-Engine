@@ -458,6 +458,7 @@ class LedgerRow(StrictBaseModel):
     debug_av_mid_raw_unrounded: Decimal | None = None
     debug_interest_credited_unrounded: Decimal | None = None
     debug_account_value_eop_unrounded: Decimal | None = None
+    debug_index_account_detail: list[dict[str, str]] | None = None
 
 
 class Ledger(StrictBaseModel):
