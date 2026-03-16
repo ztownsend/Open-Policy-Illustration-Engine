@@ -93,6 +93,149 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "IULScenarioAssumptions": {
+        "additionalProperties": false,
+        "description": "IUL extends UL assumptions with index account definitions.\n\ncrediting_rate_annual is inherited but ignored \u2014 IUL uses per-account\nrates from index_accounts instead. Set to 0 in requests.",
+        "properties": {
+          "coi_table": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Coi Table",
+            "type": "object"
+          },
+          "corridor_factors": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corridor Factors"
+          },
+          "crediting_rate_annual": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Crediting Rate Annual"
+          },
+          "index_accounts": {
+            "items": {
+              "$ref": "#/components/schemas/IndexAccount"
+            },
+            "title": "Index Accounts",
+            "type": "array"
+          },
+          "interest_mode": {
+            "default": "nominal_div_12",
+            "enum": [
+              "nominal_div_12",
+              "effective_monthly"
+            ],
+            "title": "Interest Mode",
+            "type": "string"
+          },
+          "monthly_per_thousand_admin_fee": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Monthly Per Thousand Admin Fee"
+          },
+          "monthly_policy_fee": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Monthly Policy Fee"
+          },
+          "premium_load_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Premium Load Pct"
+          },
+          "surrender_charge_schedule": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Surrender Charge Schedule",
+            "type": "object"
+          },
+          "tax_7702": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Tax7702Assumptions"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "crediting_rate_annual",
+          "premium_load_pct",
+          "monthly_policy_fee",
+          "coi_table",
+          "surrender_charge_schedule",
+          "index_accounts"
+        ],
+        "title": "IULScenarioAssumptions",
+        "type": "object"
+      },
       "IllustrationMetadata": {
         "additionalProperties": false,
         "properties": {
@@ -400,6 +543,7 @@
               "simple_ul",
               "level_term",
               "wl_nonpar",
+              "indexed_ul",
               "annuity_deferred",
               "annuity_spia"
             ],
@@ -555,6 +699,119 @@
           "ledgers"
         ],
         "title": "IllustrationResult",
+        "type": "object"
+      },
+      "IndexAccount": {
+        "additionalProperties": false,
+        "description": "A single account within an IUL policy.",
+        "properties": {
+          "allocation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Allocation"
+          },
+          "cap": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap"
+          },
+          "fixed_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixed Rate"
+          },
+          "floor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Floor"
+          },
+          "illustrated_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Illustrated Rate"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "participation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Participation"
+          },
+          "strategy_type": {
+            "enum": [
+              "fixed",
+              "point_to_point",
+              "monthly_average"
+            ],
+            "title": "Strategy Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "allocation",
+          "strategy_type"
+        ],
+        "title": "IndexAccount",
         "type": "object"
       },
       "IssueGender": {
@@ -794,6 +1051,23 @@
               }
             ],
             "title": "Debug Av Mid Raw Unrounded"
+          },
+          "debug_index_account_detail": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Debug Index Account Detail"
           },
           "debug_interest_credited_unrounded": {
             "anyOf": [
@@ -1097,6 +1371,9 @@
                 "$ref": "#/components/schemas/WLScenarioAssumptions"
               },
               {
+                "$ref": "#/components/schemas/IULScenarioAssumptions"
+              },
+              {
                 "$ref": "#/components/schemas/AnnuityScenarioAssumptions"
               }
             ],
@@ -1112,6 +1389,9 @@
               },
               {
                 "$ref": "#/components/schemas/WLScenarioAssumptions"
+              },
+              {
+                "$ref": "#/components/schemas/IULScenarioAssumptions"
               },
               {
                 "$ref": "#/components/schemas/AnnuityScenarioAssumptions"
