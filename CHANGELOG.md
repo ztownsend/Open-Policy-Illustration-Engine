@@ -4,6 +4,21 @@ All notable changes to OPIE are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.0] - 2026-03-15
+
+### Added
+- **Indexed Universal Life (IUL)** product (`indexed_ul`) with multi-account indexed crediting
+- Index strategies: `fixed`, `point_to_point`, `monthly_average`
+- Per-account allocation with cap, floor, and participation rate parameters
+- `opie compare-strategies` CLI for IUL sensitivity analysis across cap/participation combos
+- `credit_interest()` and `benefit_payout()` hooks in ProductHooks protocol
+- IUL example request, golden files, and unit tests
+
+### Changed
+- Engine is now fully product-agnostic: interest crediting and benefit payouts are hook-driven
+- Extracted shared `resolve_premium()` helper to reduce duplication
+- SCHEMA_VERSION bumped to 0.3.0
+
 ## [0.1.0] - 2026-03-15
 
 ### Added
