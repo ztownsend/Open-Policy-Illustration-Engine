@@ -78,12 +78,14 @@ class IndexedULHooks(SimpleULHooks):
             account_interest = account_av * monthly_rate
             total_interest += account_interest
             if request.debug:
-                detail.append({
-                    "name": account.name,
-                    "allocation": str(account.allocation),
-                    "strategy": account.strategy_type,
-                    "monthly_rate": str(quantize_rate(monthly_rate)),
-                    "interest": str(quantize_money(account_interest, currency_code)),
-                })
+                detail.append(
+                    {
+                        "name": account.name,
+                        "allocation": str(account.allocation),
+                        "strategy": account.strategy_type,
+                        "monthly_rate": str(quantize_rate(monthly_rate)),
+                        "interest": str(quantize_money(account_interest, currency_code)),
+                    }
+                )
         self.last_account_detail = detail if request.debug else _NO_DETAIL
         return total_interest
