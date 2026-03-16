@@ -175,6 +175,48 @@ _HTML = """
     .diff-same {
       color: var(--muted);
     }
+    .alloc-panel {
+      margin-bottom: 12px;
+      padding: 12px;
+      background: #f7f1e8;
+      border-radius: 12px;
+    }
+    .alloc-panel h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .alloc-bar {
+      display: flex;
+      height: 28px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .alloc-segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .alloc-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+    }
+    .alloc-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .alloc-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -228,6 +270,11 @@ _HTML = """
         </div>
       </div>
       <div id="columns" class="columns"></div>
+      <div id="allocPanel" class="alloc-panel" style="display:none;">
+        <h3>Index Account Allocation</h3>
+        <div id="allocBar" class="alloc-bar"></div>
+        <div id="allocLegend" class="alloc-legend"></div>
+      </div>
       <div id="diff" class="diff-box">Run an illustration to see diffs.</div>
       <div style="overflow:auto; max-height: 420px;">
         <table id="ledger"></table>
@@ -501,6 +548,30 @@ _HTML = """
       }
     }
 
+    const allocColors = ["#c14a1c", "#2f6f6a", "#8b6914", "#5b3e8a", "#1a6b3f"];
+
+    function renderAllocPanel() {
+      const panel = document.getElementById("allocPanel");
+      const bar = document.getElementById("allocBar");
+      const legend = document.getElementById("allocLegend");
+      let payload;
+      try { payload = JSON.parse(requestEl.value); } catch { panel.style.display = "none"; return; }
+      if (payload.product_code !== "indexed_ul") { panel.style.display = "none"; return; }
+      const accounts = (payload.scenarios && payload.scenarios.current && payload.scenarios.current.index_accounts) || [];
+      if (!accounts.length) { panel.style.display = "none"; return; }
+      panel.style.display = "block";
+      bar.innerHTML = accounts.map((a, i) => {
+        const pct = (parseFloat(a.allocation) * 100).toFixed(0);
+        const color = allocColors[i % allocColors.length];
+        return `<div class="alloc-segment" style="width:${pct}%;background:${color}">${pct}%</div>`;
+      }).join("");
+      legend.innerHTML = accounts.map((a, i) => {
+        const color = allocColors[i % allocColors.length];
+        const strategy = a.strategy_type === "fixed" ? `Fixed ${(parseFloat(a.fixed_rate)*100).toFixed(1)}%` : `${a.strategy_type} (cap ${(parseFloat(a.cap)*100).toFixed(0)}%, part ${(parseFloat(a.participation)*100).toFixed(0)}%)`;
+        return `<span class="alloc-legend-item"><span class="alloc-dot" style="background:${color}"></span>${a.name}: ${strategy}</span>`;
+      }).join("");
+    }
+
     function escapeCsvValue(value) {
       if (value === null || value === undefined) {
         return "";
@@ -566,6 +637,7 @@ _HTML = """
       }
       result = await response.json();
       setStatus("Done. Ledger updated.");
+      renderAllocPanel();
       render();
     });
 
