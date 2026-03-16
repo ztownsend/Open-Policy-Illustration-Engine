@@ -67,6 +67,60 @@ class WLScenarioAssumptions(StrictBaseModel):
     tax_7702: Tax7702Assumptions | None = None
 
 
+class IndexAccount(StrictBaseModel):
+    """A single account within an IUL policy."""
+
+    name: str
+    allocation: DecimalInput
+    strategy_type: Literal["fixed", "point_to_point", "monthly_average"]
+    # Fixed account params
+    fixed_rate: DecimalInput | None = None
+    # Indexed account params
+    illustrated_rate: DecimalInput | None = None
+    cap: DecimalInput | None = None
+    floor: DecimalInput | None = None
+    participation: DecimalInput | None = None
+
+    @model_validator(mode="after")
+    def _validate_strategy_params(self) -> "IndexAccount":
+        if self.strategy_type == "fixed":
+            if self.fixed_rate is None:
+                raise ValueError("fixed_rate is required for fixed strategy")
+        else:
+            if self.illustrated_rate is None:
+                raise ValueError("illustrated_rate is required for indexed strategies")
+            if self.cap is None:
+                raise ValueError("cap is required for indexed strategies")
+            if self.floor is None:
+                raise ValueError("floor is required for indexed strategies")
+            if self.participation is None:
+                raise ValueError("participation is required for indexed strategies")
+            if self.cap < self.floor:
+                raise ValueError("cap must be >= floor")
+            if self.participation <= Decimal("0"):
+                raise ValueError("participation must be > 0")
+        return self
+
+
+class IULScenarioAssumptions(ULScenarioAssumptions):
+    """IUL extends UL assumptions with index account definitions.
+
+    crediting_rate_annual is inherited but ignored — IUL uses per-account
+    rates from index_accounts instead. Set to 0 in requests.
+    """
+
+    index_accounts: list[IndexAccount]
+
+    @model_validator(mode="after")
+    def _validate_allocations(self) -> "IULScenarioAssumptions":
+        if not self.index_accounts:
+            raise ValueError("index_accounts must not be empty")
+        total = sum(a.allocation for a in self.index_accounts)
+        if total != Decimal("1"):
+            raise ValueError(f"index_accounts allocations must sum to 1.0, got {total}")
+        return self
+
+
 class AnnuityScenarioAssumptions(StrictBaseModel):
     crediting_rate_annual: DecimalInput
     surrender_charge_schedule: dict[int, DecimalInput]
@@ -78,6 +132,7 @@ ScenarioAssumptions = (
     ULScenarioAssumptions
     | TermScenarioAssumptions
     | WLScenarioAssumptions
+    | IULScenarioAssumptions
     | AnnuityScenarioAssumptions
 )
 

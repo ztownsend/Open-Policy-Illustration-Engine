@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from opie.assumptions.models import (
     AnnuityScenarioAssumptions,
+    IULScenarioAssumptions,
     ScenarioSet,
     TermScenarioAssumptions,
     ULScenarioAssumptions,
@@ -103,7 +104,12 @@ class SolveConfig(StrictBaseModel):
 
 class IllustrationRequest(StrictBaseModel):
     product_code: Literal[
-        "simple_ul", "level_term", "wl_nonpar", "annuity_deferred", "annuity_spia"
+        "simple_ul",
+        "level_term",
+        "wl_nonpar",
+        "indexed_ul",
+        "annuity_deferred",
+        "annuity_spia",
     ]
     currency_code: CurrencyCode = CurrencyCode.USD
     reporting_currencies: list[CurrencyCode] | None = None
@@ -163,6 +169,11 @@ class IllustrationRequest(StrictBaseModel):
                 self.scenarios.guaranteed, ULScenarioAssumptions
             ):
                 raise ValueError("UL scenarios are required for simple_ul")
+            # Reject IUL scenarios on simple_ul product
+            if isinstance(self.scenarios.current, IULScenarioAssumptions) or isinstance(
+                self.scenarios.guaranteed, IULScenarioAssumptions
+            ):
+                raise ValueError("Use indexed_ul product_code for IUL scenarios")
             return self
 
         if self.product_code == "level_term":
@@ -191,6 +202,19 @@ class IllustrationRequest(StrictBaseModel):
                 self.scenarios.guaranteed, WLScenarioAssumptions
             ):
                 raise ValueError("WL scenarios are required for wl_nonpar")
+            return self
+
+        if self.product_code == "indexed_ul":
+            if self.term_length_months is not None:
+                raise ValueError("term_length_months is not valid for indexed_ul")
+            if self.premium_schedule is None or len(self.premium_schedule) == 0:
+                raise ValueError("premium_schedule is required for indexed_ul")
+            # IULScenarioAssumptions inherits from ULScenarioAssumptions, so
+            # we check specifically for the IUL subclass here.
+            if not isinstance(self.scenarios.current, IULScenarioAssumptions) or not isinstance(
+                self.scenarios.guaranteed, IULScenarioAssumptions
+            ):
+                raise ValueError("IUL scenarios are required for indexed_ul")
             return self
 
         if self.product_code in {"annuity_deferred", "annuity_spia"}:

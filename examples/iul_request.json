@@ -1,0 +1,86 @@
+{
+  "product_code": "indexed_ul",
+  "issue_age": 40,
+  "issue_gender": "M",
+  "risk_class": "NT",
+  "face_amount": "500000",
+  "issue_date": "2025-01-01",
+  "duration_months": 240,
+  "premium_schedule": [
+    {
+      "start_month": 1,
+      "end_month": 240,
+      "amount": "800"
+    }
+  ],
+  "scenarios": {
+    "current": {
+      "crediting_rate_annual": "0",
+      "premium_load_pct": "0.06",
+      "monthly_policy_fee": "10",
+      "monthly_per_thousand_admin_fee": "0.08",
+      "coi_table": {
+        "40": "3.50", "41": "3.70", "42": "3.90", "43": "4.10", "44": "4.30",
+        "45": "4.60", "46": "4.90", "47": "5.20", "48": "5.50", "49": "5.80",
+        "50": "6.20", "51": "6.60", "52": "7.00", "53": "7.50", "54": "8.00",
+        "55": "8.60", "56": "9.30", "57": "10.00", "58": "10.80", "59": "11.70"
+      },
+      "surrender_charge_schedule": {
+        "1": "2000", "12": "1800", "24": "1600", "36": "1400",
+        "48": "1200", "60": "1000", "72": "800", "84": "600",
+        "96": "400", "108": "200", "120": "0"
+      },
+      "index_accounts": [
+        {
+          "name": "Fixed Account",
+          "allocation": "0.40",
+          "strategy_type": "fixed",
+          "fixed_rate": "0.03"
+        },
+        {
+          "name": "S&P 500 Point-to-Point",
+          "allocation": "0.60",
+          "strategy_type": "point_to_point",
+          "illustrated_rate": "0.075",
+          "cap": "0.10",
+          "floor": "0.00",
+          "participation": "1.00"
+        }
+      ]
+    },
+    "guaranteed": {
+      "crediting_rate_annual": "0",
+      "premium_load_pct": "0.06",
+      "monthly_policy_fee": "10",
+      "monthly_per_thousand_admin_fee": "0.08",
+      "coi_table": {
+        "40": "4.50", "41": "4.80", "42": "5.10", "43": "5.40", "44": "5.70",
+        "45": "6.10", "46": "6.50", "47": "6.90", "48": "7.30", "49": "7.80",
+        "50": "8.30", "51": "8.90", "52": "9.50", "53": "10.20", "54": "10.90",
+        "55": "11.70", "56": "12.60", "57": "13.50", "58": "14.50", "59": "15.60"
+      },
+      "surrender_charge_schedule": {
+        "1": "2000", "12": "1800", "24": "1600", "36": "1400",
+        "48": "1200", "60": "1000", "72": "800", "84": "600",
+        "96": "400", "108": "200", "120": "0"
+      },
+      "index_accounts": [
+        {
+          "name": "Fixed Account",
+          "allocation": "0.40",
+          "strategy_type": "fixed",
+          "fixed_rate": "0.01"
+        },
+        {
+          "name": "S&P 500 Point-to-Point",
+          "allocation": "0.60",
+          "strategy_type": "point_to_point",
+          "illustrated_rate": "0.00",
+          "cap": "0.10",
+          "floor": "0.00",
+          "participation": "1.00"
+        }
+      ]
+    }
+  }
+}

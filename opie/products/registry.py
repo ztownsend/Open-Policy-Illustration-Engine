@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from opie.products.annuity_deferred import DeferredAnnuityHooks
 from opie.products.annuity_spia import SPIAHooks
+from opie.products.iul import IndexedULHooks
 from opie.products.term_level import LevelTermHooks
 from opie.products.ul_simple import SimpleULHooks
 from opie.products.wl_nonpar import WLNonParHooks
@@ -12,6 +13,7 @@ PRODUCT_REGISTRY = {
     "simple_ul": SimpleULHooks(),
     "level_term": LevelTermHooks(),
     "wl_nonpar": WLNonParHooks(),
+    "indexed_ul": IndexedULHooks(),
     "annuity_deferred": DeferredAnnuityHooks(),
     "annuity_spia": SPIAHooks(),
 }
