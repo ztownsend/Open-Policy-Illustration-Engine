@@ -4,6 +4,14 @@ All notable changes to OPIE are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.1] - 2026-03-15
+
+### Added
+- Per-account debug fields for IUL crediting breakdown (debug_index_account_detail)
+- IUL account allocation panel in UI Explorer with colored bar chart
+- IUL crediting methodology notebook (notebooks/iul_crediting.ipynb)
+- Updated OpenAPI schema with indexed_ul product
+
 ## [0.2.0] - 2026-03-15
 
 ### Added
