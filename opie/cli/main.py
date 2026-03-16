@@ -148,6 +148,7 @@ def quickstart(
         "level_term": "term_request.json",
         "wl_nonpar": "wl_request.json",
         "annuity_deferred": "annuity_deferred_request.json",
+        "indexed_ul": "iul_request.json",
         "annuity_spia": "annuity_spia_request.json",
     }
     filename = product_map.get(product)
@@ -160,6 +161,49 @@ def quickstart(
     out_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     typer.echo(f"Wrote {product} example to {out_path}")
     typer.echo(f"Run: opie illustrate --in {out_path} --out result.json")
+
+
+@app.command("compare-strategies")
+def compare_strategies(
+    in_path: Path = typer.Option(..., "--in", exists=True, readable=True),
+    cap: list[str] = typer.Option([], "--cap"),
+    participation: list[str] = typer.Option([], "--participation"),
+    year: int = typer.Option(10, "--year"),
+) -> None:
+    """Run the same IUL request with different cap/participation combos."""
+    import json
+
+    payload = json.loads(in_path.read_text())
+    if payload.get("product_code") != "indexed_ul":
+        raise typer.BadParameter("compare-strategies requires an indexed_ul request")
+
+    caps = [Decimal(c) for c in cap] if cap else [Decimal("0.08"), Decimal("0.10"), Decimal("0.12")]
+    parts = (
+        [Decimal(p) for p in participation]
+        if participation
+        else [Decimal("0.80"), Decimal("1.00"), Decimal("1.20")]
+    )
+
+    month = year * 12
+    header = f"{'Cap':>8} {'Part':>8} {'AV (current)':>14} {'AV (guaranteed)':>16}"
+    typer.echo(header)
+    typer.echo("-" * len(header))
+
+    for c in caps:
+        for p in parts:
+            modified = json.loads(json.dumps(payload))
+            for scenario_name in ("current", "guaranteed"):
+                for acct in modified["scenarios"][scenario_name].get("index_accounts", []):
+                    if acct.get("strategy_type") != "fixed":
+                        acct["cap"] = str(c)
+                        acct["participation"] = str(p)
+            request = IllustrationRequest.model_validate(modified)
+            result = run_illustration(request)
+            cur_rows = result.ledgers["current"].rows
+            guar_rows = result.ledgers["guaranteed"].rows
+            cur_av = cur_rows[min(month, len(cur_rows)) - 1].account_value_eop
+            guar_av = guar_rows[min(month, len(guar_rows)) - 1].account_value_eop
+            typer.echo(f"{c:>8.1%} {p:>8.0%} ${cur_av:>13,.2f} ${guar_av:>15,.2f}")
 
 
 @app.command()
